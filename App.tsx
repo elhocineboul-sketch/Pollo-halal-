@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Product, Screen, CartItem, ToastMessage, Locale, Customer, Order, CustomerOrderDetails, OrderConfirmationDetails } from './types';
+import React, { useState, useEffect, useRef } from 'react';
+import { Product, Screen, CartItem, ToastMessage, Locale, Customer, Order, CustomerOrderDetails, OrderConfirmationDetails, Offer, OfferType } from './types';
 import Home from './screens/Home';
 import Admin from './screens/Admin';
 import ProductFormModal from './components/ProductFormModal';
@@ -10,31 +10,104 @@ import SettingsModal from './components/SettingsModal'; // Import new SettingsMo
 import Customers from './screens/Customers'; // Import new Customers screen
 import CustomerOrdersModal from './components/CustomerOrdersModal'; // Import new CustomerOrdersModal
 import OrderConfirmationModal from './components/OrderConfirmationModal'; // Import new OrderConfirmationModal
+import OfferManagementModal from './components/OfferManagementModal'; // Import new OfferManagementModal
+import OfferFormModal from './components/OfferFormModal'; // Import new OfferFormModal
 import { LocaleProvider, useTranslation, useLocale } from './i18n/LocaleContext'; // Import LocaleProvider and hooks
 
-// Dummy products for initial state
-const initialProducts: Product[] = [
-  { id: 1, name: { es: 'Pechuga de pollo fresca', en: 'Fresh Chicken Breast', ar: 'صدر دجاج طازج' }, desc: { es: 'Pechuga de pollo sin piel ni hueso', en: 'Skinless boneless chicken breast', ar: 'صدر دجاج بدون جلد' }, wholesale: 6, sale: 8.95, img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400', unitWeightKg: 0.5, initialUnitsStock: 100, unitsSold: 5 },
-  { id: 2, name: { es: 'Pollo entero', en: 'Whole Chicken', ar: 'دجاج كامل' }, desc: { es: 'Pollo Halal fresco', en: 'Fresh Halal chicken', ar: 'دجاج حلال طازج' }, wholesale: 9, sale: 12.95, img: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=400', unitWeightKg: 1.2, initialUnitsStock: 50, unitsSold: 2 },
-  { id: 3, name: { es: 'Muslo de pollo', en: 'Chicken Thigh', ar: 'فخذ الدجاج' }, desc: { es: 'Muslo de pollo marinado', en: 'Marinated chicken thigh', ar: 'فخذ دجاج متبل' }, wholesale: 5, sale: 7.50, img: 'https://images.unsplash.com/photo-1598515213692-02222292012d?w=400', unitWeightKg: 0.8, initialUnitsStock: 75, unitsSold: 10 },
-  { id: 4, name: { es: 'Alas de pollo', en: 'Chicken Wings', ar: 'أجنحة الدجاج' }, desc: { es: 'Alas crujientes', en: 'Crispy wings', ar: 'أجنحة مقرمشة' }, wholesale: 7, sale: 9.95, img: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400', unitWeightKg: 0.6, initialUnitsStock: 90, unitsSold: 7 }
-];
+// Dummy products for initial state - Changed to empty array
+const initialProducts: Product[] = [];
 
-// Dummy customers for initial state
-const initialCustomers: Customer[] = [
-  { id: 1, name: 'Juan Perez', email: 'juan.perez@example.com', phone: '555-1234', address: '123 Main St, Anytown', totalPurchases: 150.75, orders: [], status: 'returning' },
-  { id: 2, name: 'Maria Garcia', email: 'maria.g@example.com', phone: '555-5678', address: '456 Oak Ave, Somewhere', totalPurchases: 320.00, orders: [], status: 'returning' },
-  { id: 3, name: 'Ahmed Khan', email: 'ahmed.k@example.com', phone: '555-9012', address: '789 Pine Ln, Nowhere', totalPurchases: 85.50, orders: [], status: 'returning' },
-  { id: 4, name: 'Fatima Al-Fassi', email: 'fatima.a@example.com', phone: '555-3456', address: '101 Cedar Rd, Hiddentown', totalPurchases: 210.25, orders: [], status: 'returning' },
-];
+// Dummy customers for initial state - Changed to empty array
+const initialCustomers: Customer[] = [];
 
+// Define low stock threshold
+const LOW_STOCK_THRESHOLD = 10;
 
 const AppContent: React.FC = () => {
   const t = useTranslation(); // Use translation hook
   const { locale } = useLocale(); // Use locale hook to get current locale
 
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers); // New state for customers
+  // Initialize products from localStorage or use initialProducts
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const storedProducts = localStorage.getItem('products');
+      return storedProducts ? JSON.parse(storedProducts) : initialProducts;
+    } catch (error) {
+      console.error("Error loading products from localStorage:", error);
+      return initialProducts;
+    }
+  });
+
+  // Initialize customers from localStorage or use initialCustomers
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    try {
+      const storedCustomers = localStorage.getItem('customers');
+      return storedCustomers ? JSON.parse(storedCustomers) : initialCustomers;
+    } catch (error) {
+      console.error("Error loading customers from localStorage:", error);
+      return initialCustomers;
+    }
+  });
+
+  // Initialize offers from localStorage or use an empty array
+  const [offers, setOffers] = useState<Offer[]>(() => {
+    try {
+      const storedOffers = localStorage.getItem('offers');
+      let loadedOffers: Offer[] = storedOffers ? JSON.parse(storedOffers) : [];
+
+      // Migration: Convert old TwoForOne offers to BuyXGetYFree
+      // Replaced OfferType.TwoForOne with its string literal to resolve TypeScript error.
+      // Casting offer.type to 'string' allows comparison with the literal 'TwoForOne' for migration.
+      loadedOffers = loadedOffers.map(offer => {
+        if ((offer.type as string) === 'TwoForOne') { 
+          console.warn(`Migrating TwoForOne offer (id: ${offer.id}) to BuyXGetYFree (Buy 2 Get 1 Free).`);
+          return {
+            ...offer,
+            type: OfferType.BuyXGetYFree,
+            buyQuantity: 2,
+            getFreeQuantity: 1,
+            value: undefined, // Remove old 'value' property as it's not applicable
+          };
+        }
+        return offer;
+      });
+
+      return loadedOffers;
+    } catch (error) {
+      console.error("Error loading offers from localStorage:", error);
+      return [];
+    }
+  });
+  
+  // Save products to localStorage whenever the products state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('products', JSON.stringify(products));
+    } catch (error) {
+      console.error("Error saving products to localStorage:", error);
+    }
+  }, [products]);
+
+  // Save customers to localStorage whenever the customers state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('customers', JSON.stringify(customers));
+    }
+    catch (error) {
+      console.error("Error saving customers to localStorage:", error);
+    }
+  }, [customers]);
+
+  // Save offers to localStorage whenever the offers state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('offers', JSON.stringify(offers));
+    } catch (error) {
+      console.error("Error saving offers to localStorage:", error);
+    }
+  }, [offers]);
+
+
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.Home);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // New state for SettingsModal
   const [isProductFormModalOpen, setIsProductFormModalOpen] = useState(false);
@@ -60,6 +133,64 @@ const AppContent: React.FC = () => {
   const [isOrderConfirmationModalOpen, setIsOrderConfirmationModalOpen] = useState(false);
   const [lastOrderDetails, setLastOrderDetails] = useState<OrderConfirmationDetails | null>(null);
 
+  // Ref to keep track of products for which a low stock alert has been shown
+  const alertedLowStockProductIds = useRef<Set<number>>(new Set());
+
+  // Dark Mode state
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const storedDarkMode = localStorage.getItem('isDarkMode');
+      return storedDarkMode ? JSON.parse(storedDarkMode) : false; // Default to light mode
+    } catch (error) {
+      console.error("Error loading dark mode preference from localStorage:", error);
+      return false;
+    }
+  });
+
+  // Admin Login State: Keeps track if an admin is logged in
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
+    try {
+      const storedAdminLogin = localStorage.getItem('isAdminLoggedIn');
+      return storedAdminLogin ? JSON.parse(storedAdminLogin) : false;
+    } catch (error) {
+      console.error("Error loading admin login state from localStorage:", error);
+      return false;
+    }
+  });
+
+  // Offer Management States
+  const [isOfferManagementModalOpen, setIsOfferManagementModalOpen] = useState(false);
+  const [isOfferFormModalOpen, setIsOfferFormModalOpen] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+
+
+  // Effect to apply/remove 'dark' class to html element and persist dark mode preference
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
+    } catch (error) {
+      console.error("Error saving dark mode preference to localStorage:", error);
+    }
+  }, [isDarkMode]);
+
+  // Effect to persist admin login state
+  useEffect(() => {
+    try {
+      localStorage.setItem('isAdminLoggedIn', JSON.stringify(isAdminLoggedIn));
+    } catch (error) {
+      console.error("Error saving admin login state to localStorage:", error);
+    }
+  }, [isAdminLoggedIn]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prevMode => !prevMode);
+  };
+
 
   const addToast = (messageKey: string, type: 'success' | 'error' | 'info' = 'success', args?: Record<string, string | number>) => {
     const id = Date.now().toString(); // Simple unique ID
@@ -70,6 +201,36 @@ const AppContent: React.FC = () => {
     setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
   };
 
+  // Effect to check for low stock products and display toasts
+  useEffect(() => {
+    const currentLowStockIds = new Set<number>();
+
+    products.forEach(product => {
+      const unitsRemaining = product.initialUnitsStock - product.unitsSold;
+      if (unitsRemaining <= LOW_STOCK_THRESHOLD) {
+        currentLowStockIds.add(product.id);
+        if (!alertedLowStockProductIds.current.has(product.id)) {
+          addToast(
+            'lowStockAlert',
+            'info',
+            {
+              productName: product.name[locale] || product.name.es,
+              unitsRemaining: unitsRemaining,
+            }
+          );
+          alertedLowStockProductIds.current.add(product.id);
+        }
+      }
+    });
+
+    // Remove product IDs from the alerted set if their stock has recovered
+    alertedLowStockProductIds.current.forEach(id => {
+      if (!currentLowStockIds.has(id)) {
+        alertedLowStockProductIds.current.delete(id);
+      }
+    });
+  }, [products, locale, t]); // Depend on products, locale, and t for re-evaluation
+
 
   const handleShowSettings = () => { // Renamed from handleShowLogin
     setIsSettingsModalOpen(true);
@@ -79,8 +240,25 @@ const AppContent: React.FC = () => {
     setIsSettingsModalOpen(false);
   };
 
-  const handleAdminLogin = () => { // New handler for admin login from SettingsModal
+  const handleAdminLoginSuccess = () => { // Renamed to clearly indicate success
+    setIsAdminLoggedIn(true); // Set admin logged in state
     setCurrentScreen(Screen.Admin);
+    setIsSettingsModalOpen(false); // Close main settings modal after successful login
+  };
+
+  const handleGoToAdminPanel = () => { // New handler for direct admin panel access when already logged in
+    setCurrentScreen(Screen.Admin);
+    setIsSettingsModalOpen(false); // Close settings modal
+  };
+
+  const handleAdminLoginError = () => {
+    addToast('incorrectPasswordAlert', 'error');
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminLoggedIn(false); // Clear admin logged in state
+    setCurrentScreen(Screen.Home); // Redirects to home page, effectively logging out of admin
+    addToast('loggedOutSuccess', 'info');
   };
 
   const handleGoHome = () => {
@@ -106,6 +284,11 @@ const AppContent: React.FC = () => {
 
   const handleDeleteProduct = (id: number) => {
     if (window.confirm(t('confirmDeleteProduct'))) {
+      // First, check if the product has an active offer. If so, delete the offer too.
+      const associatedOffer = offers.find(offer => offer.targetProductId === id);
+      if (associatedOffer) {
+        setOffers(prevOffers => prevOffers.filter(offer => offer.id !== associatedOffer.id));
+      }
       setProducts(prevProducts => prevProducts.filter(p => p.id !== id));
       addToast('productDeletedSuccess', 'success');
     }
@@ -113,11 +296,11 @@ const AppContent: React.FC = () => {
 
   const handleSaveProduct = (product: Product) => {
     if (editingProduct) {
-      setProducts(prevProducts => prevProducts.map(p => (p.id === product.id ? product : p)));
+      setProducts(prevProducts => prevProducts.map(p => (p.id === product.id ? { ...product, activeOfferId: p.activeOfferId } : p)));
       addToast('productUpdatedSuccess', 'success');
     } else {
-      // For new products, initialize unitsSold
-      const newProductWithInventory = { ...product, unitsSold: 0 };
+      // For new products, initialize unitsSold and no active offer
+      const newProductWithInventory = { ...product, unitsSold: 0, activeOfferId: undefined };
       setProducts(prevProducts => [...prevProducts, newProductWithInventory]);
       addToast('productAddedSuccess', 'success');
     }
@@ -191,7 +374,35 @@ const AppContent: React.FC = () => {
       return;
     }
 
-    const total = cart.reduce((sum, item) => sum + item.product.sale * item.quantity, 0);
+    // Calculate total with offers applied
+    const total = cart.reduce((sum, item) => {
+      const offer = item.product.activeOfferId ? offers.find(o => o.id === item.product.activeOfferId && o.isActive) : undefined;
+      let effectivePrice = item.product.sale;
+      let effectiveQuantity = item.quantity;
+
+      if (offer) {
+        if (offer.type === OfferType.PercentageDiscount) {
+          effectivePrice = item.product.sale * (1 - offer.value! / 100);
+        } else if (offer.type === OfferType.FixedDiscount) {
+          effectivePrice = Math.max(0, item.product.sale - offer.value!); // Price won't go below 0
+        } else if (offer.type === OfferType.BuyXGetYFree) {
+          const buyX = offer.buyQuantity || 0; // Default to 0 to prevent division by zero
+          const getY = offer.getFreeQuantity || 0;
+
+          if (buyX > 0 && getY >= 0) {
+            // Calculate paid quantity: total quantity - (number of bundles * free items per bundle)
+            // Example: Buy 2 Get 1 Free (X=2, Y=1). Bundle size = X+Y = 3. Customer pays for X=2 items per bundle.
+            // If item.quantity = 3, floor(3/3) = 1 bundle. 1*Y=1 free. Effective quantity = 3-1 = 2.
+            // If item.quantity = 5, floor(5/3) = 1 bundle. 1*Y=1 free. Effective quantity = 5-1 = 4.
+            // If item.quantity = 6, floor(6/3) = 2 bundles. 2*Y=2 free. Effective quantity = 6-2 = 4.
+            effectiveQuantity = item.quantity - (Math.floor(item.quantity / (buyX + getY)) * getY);
+          }
+        }
+      }
+      return sum + effectivePrice * effectiveQuantity;
+    }, 0);
+
+
     const expectedDelivery = t('deliveryTime'); // Static expected delivery for now
 
     try {
@@ -370,9 +581,124 @@ const AppContent: React.FC = () => {
     setSelectedCustomerForOrders(null);
   };
 
+  // Offer Management Handlers
+  const handleShowOfferManagement = () => {
+    setIsOfferManagementModalOpen(true);
+  };
+
+  const handleCloseOfferManagement = () => {
+    setIsOfferManagementModalOpen(false);
+  };
+
+  const handleAddOffer = () => {
+    setEditingOffer(null);
+    setIsOfferFormModalOpen(true);
+  };
+
+  const handleEditOffer = (offerId: string) => {
+    const offerToEdit = offers.find(o => o.id === offerId);
+    if (offerToEdit) {
+      setEditingOffer(offerToEdit);
+      setIsOfferFormModalOpen(true);
+    }
+  };
+
+  const handleSaveOffer = (offer: Offer) => {
+    // Check if the target product already has an active offer (unless it's the current offer being edited)
+    const existingOfferForProduct = offers.find(
+      o => o.targetProductId === offer.targetProductId && o.id !== offer.id && o.isActive
+    );
+
+    if (offer.isActive && existingOfferForProduct) {
+      addToast('productAlreadyHasOffer', 'error', { productName: products.find(p => p.id === offer.targetProductId)?.name[locale] || '' });
+      return;
+    }
+
+
+    setOffers(prevOffers => {
+      let updatedOffers;
+      if (editingOffer) {
+        updatedOffers = prevOffers.map(o => (o.id === offer.id ? offer : o));
+        addToast('offerUpdatedSuccess', 'success');
+      } else {
+        updatedOffers = [...prevOffers, offer];
+        addToast('offerAddedSuccess', 'success');
+      }
+
+      // Update products to link/unlink the offer
+      setProducts(prevProducts =>
+        prevProducts.map(p => {
+          if (p.id === offer.targetProductId) {
+            // If this product is the target of the new/updated offer
+            if (offer.isActive) {
+              return { ...p, activeOfferId: offer.id };
+            } else {
+              // If the offer is inactive or deleted, remove its link from the product
+              return { ...p, activeOfferId: undefined };
+            }
+          } else if (p.activeOfferId === offer.id && !offer.isActive) {
+            // If another product was linked to this offer, but the offer is now inactive
+            return { ...p, activeOfferId: undefined };
+          }
+          return p;
+        })
+      );
+      return updatedOffers;
+    });
+    setIsOfferFormModalOpen(false);
+  };
+
+  const handleDeleteOffer = (offerId: string) => {
+    if (window.confirm(t('confirmDeleteOffer'))) {
+      setOffers(prevOffers => prevOffers.filter(o => o.id !== offerId));
+      // Unlink offer from product
+      setProducts(prevProducts =>
+        prevProducts.map(p => (p.activeOfferId === offerId ? { ...p, activeOfferId: undefined } : p))
+      );
+      addToast('offerDeletedSuccess', 'success');
+    }
+  };
+
+  const handleToggleOfferActive = (offerId: string) => {
+    setOffers(prevOffers =>
+      prevOffers.map(o => {
+        if (o.id === offerId) {
+          const newActiveState = !o.isActive;
+
+          // If activating, check for conflicts
+          if (newActiveState) {
+            const productWithExistingOffer = products.find(
+              p => p.id === o.targetProductId && p.activeOfferId && p.activeOfferId !== o.id
+            );
+            if (productWithExistingOffer) {
+              addToast('productAlreadyHasOtherActiveOffer', 'error', {
+                productName: productWithExistingOffer.name[locale] || '',
+              });
+              return o; // Do not activate this offer
+            }
+          }
+
+          // Update product link based on new offer state
+          setProducts(prevProducts =>
+            prevProducts.map(p => {
+              if (p.id === o.targetProductId) {
+                return { ...p, activeOfferId: newActiveState ? o.id : undefined };
+              } else if (p.activeOfferId === o.id && !newActiveState) {
+                // If offer is deactivated, ensure it's unlinked from any product
+                return { ...p, activeOfferId: undefined };
+              }
+              return p;
+            })
+          );
+          return { ...o, isActive: newActiveState };
+        }
+        return o;
+      })
+    );
+  };
 
   return (
-    <div className="container max-w-lg mx-auto bg-white min-h-screen shadow-lg">
+    <div className="container max-w-lg mx-auto bg-white min-h-screen shadow-lg dark:bg-gray-900">
       {currentScreen === Screen.Home && (
         <Home
           products={products}
@@ -380,6 +706,7 @@ const AppContent: React.FC = () => {
           onShowCart={handleShowCart}
           onAddToCart={handleAddToCart}
           cartItemCount={cartItemCount}
+          offers={offers} // Pass offers to Home
         />
       )}
       {currentScreen === Screen.Admin && (
@@ -391,6 +718,8 @@ const AppContent: React.FC = () => {
           onDeleteProduct={handleDeleteProduct}
           onShowPaymentActivation={handleShowPaymentActivation}
           onShowCustomers={handleShowCustomers} // Pass new handler
+          onShowOfferManagement={handleShowOfferManagement} // New: pass handler for offer management
+          onAdminLogout={handleAdminLogout} // Pass new logout handler
         />
       )}
       {currentScreen === Screen.Customers && ( // New Customers screen
@@ -405,7 +734,12 @@ const AppContent: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={handleCloseSettings}
-        onAdminLogin={handleAdminLogin}
+        onAdminLoginSuccess={handleAdminLoginSuccess} // Use new success handler
+        onGoToAdminPanel={handleGoToAdminPanel} // Pass handler for direct admin panel access
+        isAdminLoggedIn={isAdminLoggedIn} // Pass admin login state
+        isDarkMode={isDarkMode} // Pass dark mode state
+        onToggleDarkMode={toggleDarkMode} // Pass dark mode toggle function
+        onLoginError={handleAdminLoginError} // Pass the error handler for login
       />
 
       <ProductFormModal
@@ -434,6 +768,7 @@ const AppContent: React.FC = () => {
         isCODEnabled={isCODEnabled} // Pass payment enablement state
         isOnlinePaymentEnabled={isOnlinePaymentEnabled} // Pass payment enablement state
         isNequiEnabled={isNequiEnabled} // Pass Nequi enablement state
+        offers={offers} // Pass offers to CartModal
       />
 
       {/* Customer Orders Modal */}
@@ -454,6 +789,27 @@ const AppContent: React.FC = () => {
           onShareOrder={handleShareOrder}
         />
       )}
+
+      {/* Offer Management Modals */}
+      <OfferManagementModal
+        isOpen={isOfferManagementModalOpen}
+        onClose={handleCloseOfferManagement}
+        offers={offers}
+        products={products}
+        onAddOffer={handleAddOffer}
+        onEditOffer={handleEditOffer}
+        onDeleteOffer={handleDeleteOffer}
+        onToggleOfferActive={handleToggleOfferActive}
+      />
+
+      <OfferFormModal
+        isOpen={isOfferFormModalOpen}
+        onClose={() => setIsOfferFormModalOpen(false)}
+        onSave={handleSaveOffer}
+        editingOffer={editingOffer}
+        products={products}
+        offers={offers} // Pass offers to check for conflicts
+      />
 
       <Toast messages={toasts} onRemoveToast={removeToast} />
     </div>

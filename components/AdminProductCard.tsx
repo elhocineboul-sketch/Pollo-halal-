@@ -21,25 +21,25 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({ product, onEdit, on
   const productDesc = product.desc[locale] || product.desc.es || product.desc.en || 'N/A';
 
   return (
-    <div className="bg-white rounded-2xl p-4 m-4 shadow-sm text-end"> {/* Changed text-right to text-end */}
+    <div className="bg-white rounded-2xl p-4 m-4 shadow-sm text-end dark:bg-gray-800 dark:text-white"> {/* Changed text-right to text-end */}
       <div className="flex gap-4 mb-4">
-        <img src={product.img} alt={productName} className="w-20 h-20 object-contain rounded-xl bg-gray-100" />
+        <img src={product.img} alt={productName} className="w-20 h-20 object-contain rounded-xl bg-gray-100 dark:bg-gray-700" />
         <div className="flex-1">
           <div className="font-bold text-lg mb-1">{productName}</div>
-          <div className="text-gray-600 text-sm">{productDesc}</div>
+          <div className="text-gray-600 text-sm dark:text-gray-400">{productDesc}</div>
         </div>
       </div>
-      <div className="bg-gray-100 p-4 rounded-xl mb-4">
+      <div className="bg-gray-100 p-4 rounded-xl mb-4 dark:bg-gray-700">
         <div className="flex justify-between mb-2 text-sm">
-          <span className="text-gray-600">{t('wholesalePriceLabel')}</span>
+          <span className="text-gray-600 dark:text-gray-300">{t('wholesalePriceLabel')}</span>
           <span className="font-bold">${product.wholesale.toFixed(2)}</span>
         </div>
         <div className="flex justify-between mb-2 text-sm">
-          <span className="text-gray-600">{t('salePriceLabel')}</span>
+          <span className="text-gray-600 dark:text-gray-300">{t('salePriceLabel')}</span>
           <span className="font-bold">${product.sale.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">{t('profitLabel')}</span>
+          <span className="text-gray-600 dark:text-gray-300">{t('profitLabel')}</span>
           <span className={`font-bold ${profitColorClass}`}>
             ${profit.toFixed(2)} ({percent}%)
           </span>

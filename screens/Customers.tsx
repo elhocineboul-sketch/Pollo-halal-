@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Customer } from '../types';
 import Button from '../components/Button';
@@ -28,22 +29,17 @@ const Customers: React.FC<CustomersProps> = ({ customers, onGoHome, onViewOrders
             <div className="text-3xl font-bold mb-1">{t('customersListTitle')}</div>
             <p className="text-base">{t('adminPanelSubtitle')}</p> {/* Re-using admin subtitle */}
           </div>
-          {/* Exit Button - can be replaced with a dedicated "go to admin" if needed */}
-          <button className="bg-white bg-opacity-20 border-none text-white text-2xl p-3 rounded-xl cursor-pointer" onClick={onGoHome} aria-label={t('exitAria')}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-          </button>
+          {/* Removed Exit Button */}
         </div>
       </header>
 
       <div className="p-5 overflow-x-auto">
         {customers.length === 0 ? (
-          <p className="text-center text-gray-500">{t('customerNotFoundMessage')}</p>
+          <p className="text-center text-gray-500 dark:text-gray-400">{t('customerNotFoundMessage')}</p>
         ) : (
-          <table className="w-full text-end border-collapse bg-white shadow-md rounded-xl overflow-hidden">
+          <table className="w-full text-end border-collapse bg-white shadow-md rounded-xl overflow-hidden dark:bg-gray-800">
             <thead>
-              <tr className="bg-blue-100 text-blue-800 text-sm font-semibold">
+              <tr className="bg-blue-100 text-blue-800 text-sm font-semibold dark:bg-blue-900 dark:text-blue-100">
                 <th className="py-3 px-4 whitespace-nowrap">{t('customerNameTableHeading')}</th>
                 <th className="py-3 px-4 whitespace-nowrap">{t('customerEmailTableHeading')}</th>
                 <th className="py-3 px-4 whitespace-nowrap">{t('customerPhoneTableHeading')}</th>
@@ -55,9 +51,9 @@ const Customers: React.FC<CustomersProps> = ({ customers, onGoHome, onViewOrders
             </thead>
             <tbody>
               {customers.map((customer, index) => {
-                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                const rowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700';
                 return (
-                  <tr key={customer.id} className={`${rowClass} border-b border-gray-100 last:border-b-0 text-gray-700 text-sm`}>
+                  <tr key={customer.id} className={`${rowClass} border-b border-gray-100 last:border-b-0 text-gray-700 text-sm dark:border-gray-700 dark:text-gray-300`}>
                     <td className="py-3 px-4 font-medium whitespace-nowrap">{customer.name}</td>
                     <td className="py-3 px-4 whitespace-nowrap">{customer.email}</td>
                     <td className="py-3 px-4 whitespace-nowrap">{customer.phone}</td>

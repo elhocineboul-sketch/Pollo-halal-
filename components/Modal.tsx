@@ -16,11 +16,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-xl"
+        className="bg-white rounded-3xl p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
       >
         {title && (
-          <h2 className="text-2xl font-bold text-center mb-5">{title}</h2>
+          <h2 className="text-2xl font-bold text-center mb-5 dark:text-white">{title}</h2>
         )}
         {children}
       </div>

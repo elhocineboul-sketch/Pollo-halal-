@@ -38,13 +38,13 @@ const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('activatePaymentTitle')}>
-      <p className="text-gray-700 text-base mb-5 text-center">
+      <p className="text-gray-700 text-base mb-5 text-center dark:text-gray-300">
         {t('activatePaymentDescription')}
       </p>
 
       {/* Cash on Delivery Toggle */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-        <label htmlFor="codToggle" className="text-gray-800 text-lg font-medium cursor-pointer">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <label htmlFor="codToggle" className="text-gray-800 text-lg font-medium cursor-pointer dark:text-white">
           {t('codLabel')}
         </label>
         <input
@@ -56,12 +56,12 @@ const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
           aria-checked={codEnabled}
           role="switch"
         />
-        <div className="relative w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 cursor-pointer" aria-hidden="true"></div>
+        <div className="relative w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 cursor-pointer dark:bg-gray-700" aria-hidden="true"></div>
       </div>
 
       {/* Online Payment Toggle */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-        <label htmlFor="onlinePaymentToggle" className="text-gray-800 text-lg font-medium cursor-pointer">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <label htmlFor="onlinePaymentToggle" className="text-gray-800 text-lg font-medium cursor-pointer dark:text-white">
           {t('onlinePaymentLabel')}
         </label>
         <input
@@ -73,12 +73,12 @@ const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
           aria-checked={onlinePaymentEnabled}
           role="switch"
         />
-        <div className="relative w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 cursor-pointer" aria-hidden="true"></div>
+        <div className="relative w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 cursor-pointer dark:bg-gray-700" aria-hidden="true"></div>
       </div>
 
       {/* Nequi Payment Toggle */}
       <div className="flex items-center justify-between mb-6">
-        <label htmlFor="nequiPaymentToggle" className="text-gray-800 text-lg font-medium cursor-pointer">
+        <label htmlFor="nequiPaymentToggle" className="text-gray-800 text-lg font-medium cursor-pointer dark:text-white">
           {t('nequiPaymentLabel')}
         </label>
         <input
@@ -90,7 +90,7 @@ const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
           aria-checked={nequiEnabled}
           role="switch"
         />
-        <div className="relative w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 cursor-pointer" aria-hidden="true"></div>
+        <div className="relative w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 cursor-pointer dark:bg-gray-700" aria-hidden="true"></div>
       </div>
 
       <Button onClick={handleSave} className="mb-2 w-full">{t('saveSettingsButton')}</Button>

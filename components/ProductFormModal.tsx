@@ -122,6 +122,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       unitWeightKg: finalUnitWeightKg,
       initialUnitsStock: finalInitialUnitsStock,
       unitsSold: editingProduct ? editingProduct.unitsSold : 0,
+      activeOfferId: editingProduct ? editingProduct.activeOfferId : undefined, // Keep existing offer ID or set to undefined for new products
     };
     onSave(newProduct);
     onClose();
@@ -142,21 +143,21 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         onChange={handleImageChange}
         className="hidden"
       />
-      <label htmlFor="imgFile" className="block bg-gray-100 p-3 rounded-xl text-center cursor-pointer text-base mb-3 hover:bg-gray-200 transition-colors">
+      <label htmlFor="imgFile" className="block bg-gray-100 p-3 rounded-xl text-center cursor-pointer text-base mb-3 hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
         {t('chooseImageLabel')}
       </label>
       {imagePreviewUrl && (
         <img
           src={imagePreviewUrl}
           alt="Product preview"
-          className="w-full h-52 object-contain rounded-xl my-3 bg-gray-100"
+          className="w-full h-52 object-contain rounded-xl my-3 bg-gray-100 dark:bg-gray-700"
         />
       )}
 
       <input
         type="text"
         id="pName"
-        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end" // Changed text-right to text-end
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" // Dark mode styles
         placeholder={t('productNamePlaceholder')}
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -164,7 +165,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <input
         type="text"
         id="pDesc"
-        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end" // Changed text-right to text-end
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" // Dark mode styles
         placeholder={t('productDescriptionPlaceholder')}
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
@@ -172,7 +173,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <input
         type="number"
         id="pWholesale"
-        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end" // Changed text-right to text-end
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" // Dark mode styles
         placeholder={t('wholesalePricePlaceholder')}
         step="0.01"
         value={wholesale ?? ''} // Display empty string for null
@@ -189,7 +190,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <input
         type="number"
         id="pSale"
-        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-4 text-base text-end" // Changed text-right to text-end
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-4 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" // Dark mode styles
         placeholder={t('salePricePlaceholder')}
         step="0.01"
         value={sale ?? ''} // Display empty string for null
@@ -207,7 +208,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <input
         type="number"
         id="pUnitWeightKg"
-        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end" // Changed text-right to text-end
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" // Dark mode styles
         placeholder={t('unitWeightKgPlaceholder')}
         step="0.01"
         value={unitWeightKg ?? ''}
@@ -224,7 +225,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <input
         type="number"
         id="pInitialUnitsStock"
-        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-4 text-base text-end" // Changed text-right to text-end
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-4 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" // Dark mode styles
         placeholder={t('initialUnitsStockPlaceholder')}
         step="1"
         value={initialUnitsStock ?? ''}
@@ -241,13 +242,13 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
 
       {(wholesale !== null && sale !== null) && (wholesale > 0 && sale > 0) && ( // Only show profit box if both are valid numbers
-        <div className="bg-gray-100 p-4 rounded-xl mb-4 text-end"> {/* Changed text-right to text-end */}
+        <div className="bg-gray-100 p-4 rounded-xl mb-4 text-end dark:bg-gray-700"> {/* Changed text-right to text-end */}
           <div className="flex justify-between mb-2 text-sm">
-            <span className="text-gray-600">{t('expectedProfitLabel')}</span>
+            <span className="text-gray-600 dark:text-gray-300">{t('expectedProfitLabel')}</span>
             <span className={`font-bold ${profitColorClass}`}>${profit.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">{t('profitPercentageLabel')}</span>
+            <span className="text-gray-600 dark:text-gray-300">{t('profitPercentageLabel')}</span>
             <span className="font-bold">{profitPercent}</span>
           </div>
         </div>

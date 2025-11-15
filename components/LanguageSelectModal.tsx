@@ -32,7 +32,7 @@ const LanguageSelectModal: React.FC<LanguageSelectModalProps> = ({ isOpen, onClo
             key={lang.code}
             onClick={() => handleSelectLanguage(lang.code)}
             variant={lang.code === currentLocale ? 'primary' : 'secondary'}
-            className={`w-full ${lang.code === currentLocale ? 'bg-amber-500 text-black' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+            className={`w-full ${lang.code === currentLocale ? 'bg-amber-500 text-black dark:text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'}`}
           >
             {lang.name}
           </Button>

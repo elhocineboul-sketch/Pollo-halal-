@@ -19,16 +19,16 @@ const Button: React.FC<ButtonProps> = ({
 
   switch (variant) {
     case 'primary':
-      variantStyles = 'bg-amber-500 text-black';
+      variantStyles = 'bg-amber-500 text-black dark:text-white';
       break;
     case 'secondary':
-      variantStyles = 'bg-gray-500 text-white';
+      variantStyles = 'bg-gray-500 text-white dark:bg-gray-700'; // Adjusted for dark mode
       break;
     case 'danger':
       variantStyles = 'bg-red-500 text-white';
       break;
     default:
-      variantStyles = 'bg-amber-500 text-black';
+      variantStyles = 'bg-amber-500 text-black dark:text-white';
   }
 
   return (

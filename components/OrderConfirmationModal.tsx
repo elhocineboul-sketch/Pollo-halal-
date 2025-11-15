@@ -26,41 +26,41 @@ const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('orderConfirmationTitle')}>
       <div className="space-y-4 text-end max-h-[70vh] overflow-y-auto pr-2">
-        <p className="text-gray-800 text-lg font-bold mb-4 text-center">✅ {t('purchaseSuccessShort')}</p>
+        <p className="text-gray-800 text-lg font-bold mb-4 text-center dark:text-white">✅ {t('purchaseSuccessShort')}</p>
 
         {/* Order ID */}
-        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-          <span className="text-gray-600 text-sm font-medium">📦 {t('orderIdTableHeading')}:</span>
-          <span className="font-bold text-base">#{orderDetails.orderId}</span>
+        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg dark:bg-gray-700">
+          <span className="text-gray-600 text-sm font-medium dark:text-gray-300">📦 {t('orderIdTableHeading')}:</span>
+          <span className="font-bold text-base dark:text-white">#{orderDetails.orderId}</span>
         </div>
 
         {/* Customer Details */}
-        <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+        <div className="bg-gray-50 p-3 rounded-lg space-y-2 dark:bg-gray-700 dark:text-white">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">👤 {t('customerNameTableHeading')}:</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">👤 {t('customerNameTableHeading')}:</span>
             <span className="font-bold text-base">{orderDetails.customerName}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">📱 {t('customerPhonePlaceholder')}:</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">📱 {t('customerPhonePlaceholder')}:</span>
             <span className="font-bold text-base">{orderDetails.customerPhone}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">📧 {t('customerEmailPlaceholder')}:</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">📧 {t('customerEmailPlaceholder')}:</span>
             <span className="font-bold text-base">{orderDetails.customerEmail}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">📍 {t('customerAddressPlaceholder')}:</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">📍 {t('customerAddressPlaceholder')}:</span>
             <span className="font-bold text-base">{orderDetails.customerAddress}</span>
           </div>
         </div>
 
         {/* Order Items Summary */}
-        <div className="bg-gray-50 p-3 rounded-lg">
+        <div className="bg-gray-50 p-3 rounded-lg dark:bg-gray-700 dark:text-white">
           <h4 className="text-base font-semibold mb-2 text-start">🛒 {t('orderItemsTableHeading')}:</h4>
           <div className="space-y-1">
             {orderDetails.orderItems.map((item) => (
               <div key={item.product.id} className="flex justify-between items-center text-sm">
-                <span className="text-gray-700">{item.product.name[locale] || item.product.name.es}</span>
+                <span className="text-gray-700 dark:text-gray-300">{item.product.name[locale] || item.product.name.es}</span>
                 <span className="font-medium">{item.quantity} × ${item.product.sale.toFixed(2)}</span>
               </div>
             ))}
@@ -68,29 +68,29 @@ const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
         </div>
 
         {/* Payment and Delivery */}
-        <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+        <div className="bg-gray-50 p-3 rounded-lg space-y-2 dark:bg-gray-700 dark:text-white">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">💰 {t('totalAmountLabel')}:</span>
-            <span className="text-lg font-extrabold text-amber-700">${orderDetails.totalAmount.toFixed(2)}</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">💰 {t('totalAmountLabel')}:</span>
+            <span className="text-lg font-extrabold text-amber-700 dark:text-amber-200">${orderDetails.totalAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">💳 {t('paymentMethodLabel')}:</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">💳 {t('paymentMethodLabel')}:</span>
             <span className="font-bold text-base">{orderDetails.paymentMethod}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm font-medium">🚚 {t('expectedDeliveryLabel')}:</span>
+            <span className="text-gray-600 text-sm font-medium dark:text-gray-300">🚚 {t('expectedDeliveryLabel')}:</span>
             <span className="font-bold text-base">{orderDetails.expectedDelivery}</span>
           </div>
         </div>
 
         {/* Order Tracking Link & QR Code */}
-        <div className="bg-amber-50 p-3 rounded-lg flex flex-col items-center justify-center text-center space-y-3 pt-4 pb-4">
+        <div className="bg-amber-50 p-3 rounded-lg flex flex-col items-center justify-center text-center space-y-3 pt-4 pb-4 dark:bg-amber-900 dark:text-white">
           <h4 className="text-base font-semibold">🔗 {t('orderTrackingLinkTitle')}</h4>
           <a
             href={orderDetails.orderTrackingLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 underline text-sm break-all"
+            className="text-blue-600 underline text-sm break-all dark:text-blue-400"
           >
             {orderDetails.orderTrackingLink}
           </a>
@@ -98,10 +98,10 @@ const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
             <img
               src={orderDetails.qrCodeImageUrl}
               alt="Order Tracking QR Code"
-              className="w-36 h-36 p-2 bg-white rounded-lg shadow-md border border-gray-200"
+              className="w-36 h-36 p-2 bg-white rounded-lg shadow-md border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
             />
           )}
-          <p className="text-gray-600 text-xs mt-1">{t('shareOrderText').split('\n')[0].replace('!', '')}!</p> {/* Short instructional text */}
+          <p className="text-gray-600 text-xs mt-1 dark:text-gray-300">{t('shareOrderText').split('\n')[0].replace('!', '')}!</p> {/* Short instructional text */}
         </div>
       </div>
 

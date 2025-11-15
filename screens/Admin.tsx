@@ -12,6 +12,8 @@ export interface AdminProps {
   onDeleteProduct: (id: number) => void;
   onShowPaymentActivation: () => void;
   onShowCustomers: () => void; // New prop for showing customers list
+  onShowOfferManagement: () => void; // New prop for showing offer management
+  onAdminLogout: () => void; // New prop for admin logout
 }
 
 const Admin: React.FC<AdminProps> = ({
@@ -22,6 +24,8 @@ const Admin: React.FC<AdminProps> = ({
   onDeleteProduct,
   onShowPaymentActivation,
   onShowCustomers, // Destructure new prop
+  onShowOfferManagement, // Destructure new prop
+  onAdminLogout, // Destructure new logout prop
 }) => {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -41,16 +45,20 @@ const Admin: React.FC<AdminProps> = ({
             <div className="text-3xl font-bold mb-1">{t('adminPanelTitle')}</div>
             <p className="text-base">{t('adminPanelSubtitle')}</p>
           </div>
-          {/* Exit Button */}
-          <button className="bg-white bg-opacity-20 border-none text-white text-2xl p-3 rounded-xl cursor-pointer" onClick={onGoHome} aria-label={t('exitAria')}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-          </button>
+          <div className="flex gap-2"> {/* Group exit and logout buttons */}
+            {/* Logout Button */}
+            <button className="bg-red-500 border-none text-white text-base py-2.5 px-4 rounded-xl cursor-pointer hover:bg-red-600 transition-colors flex items-center justify-center" onClick={onAdminLogout} aria-label={t('logoutButton')}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              {t('logoutButton')}
+            </button>
+          </div>
         </div>
       </header>
       <div className="p-5">
         <Button onClick={onAddProduct} className="py-4 text-lg mb-3 w-full">{t('addProductButton')}</Button>
+        <Button onClick={onShowOfferManagement} className="py-4 text-lg bg-indigo-500 text-white w-full mb-3">{t('manageOffersButton')}</Button> {/* New button */}
         <Button onClick={onShowPaymentActivation} className="py-4 text-lg bg-orange-500 text-white w-full mb-3">{t('activatePaymentButton')}</Button>
         <Button onClick={onShowCustomers} className="py-4 text-lg bg-blue-500 text-white w-full">{t('viewCustomersButton')}</Button> {/* New button */}
       </div>
@@ -65,11 +73,11 @@ const Admin: React.FC<AdminProps> = ({
         ))}
       </div>
 
-      <h2 className="px-5 pt-5 text-2xl font-bold text-end">{t('inventoryManagementTitle')}</h2> {/* Changed text-right to text-end */}
+      <h2 className="px-5 pt-5 text-2xl font-bold text-end dark:text-white">{t('inventoryManagementTitle')}</h2> {/* Changed text-right to text-end */}
       <div className="p-5 overflow-x-auto">
-        <table className="w-full text-end border-collapse bg-white shadow-md rounded-xl overflow-hidden"> {/* Changed text-right to text-end */}
+        <table className="w-full text-end border-collapse bg-white shadow-md rounded-xl overflow-hidden dark:bg-gray-800"> {/* Changed text-right to text-end */}
           <thead>
-            <tr className="bg-amber-100 text-amber-800 text-sm font-semibold">
+            <tr className="bg-amber-100 text-amber-800 text-sm font-semibold dark:bg-amber-900 dark:text-amber-100">
               <th className="py-3 px-4 whitespace-nowrap">{t('productTableHeading')}</th>
               <th className="py-3 px-4 whitespace-nowrap">{t('wholesaleUnitTableHeading')}</th>
               <th className="py-3 px-4 whitespace-nowrap">{t('sale500gTableHeading')}</th>
@@ -86,10 +94,10 @@ const Admin: React.FC<AdminProps> = ({
               const kgSold = p.unitsSold * p.unitWeightKg;
               const kgRemaining = unitsRemaining * p.unitWeightKg;
               const salePricePer500g = p.unitWeightKg > 0 ? (p.sale / p.unitWeightKg) * 0.5 : 0;
-              const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+              const rowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700';
 
               return (
-                <tr key={p.id} className={`${rowClass} border-b border-gray-100 last:border-b-0 text-gray-700 text-sm`}>
+                <tr key={p.id} className={`${rowClass} border-b border-gray-100 last:border-b-0 text-gray-700 text-sm dark:border-gray-700 dark:text-gray-300`}>
                   <td className="py-3 px-4 font-medium whitespace-nowrap">{p.name[locale] || p.name.es || p.name.en || 'N/A'}</td>
                   <td className="py-3 px-4 whitespace-nowrap">${p.wholesale.toFixed(2)}</td>
                   <td className="py-3 px-4 whitespace-nowrap">${salePricePer500g.toFixed(2)}</td>

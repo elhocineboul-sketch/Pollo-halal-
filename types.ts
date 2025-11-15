@@ -8,6 +8,7 @@ export interface Product {
   unitWeightKg: number;      // Weight of one unit in kilograms (e.g., 0.5 for 500g pack, 1.2 for 1.2kg chicken)
   initialUnitsStock: number; // Total number of units initially put into stock
   unitsSold: number;         // Total number of units sold
+  activeOfferId?: string;    // Optional: ID of an active offer applying to this product
 }
 
 export interface CartItem {
@@ -69,3 +70,20 @@ export interface OrderConfirmationDetails {
 }
 
 export type Locale = 'es' | 'en' | 'ar';
+
+export enum OfferType {
+  PercentageDiscount = 'PercentageDiscount', // e.g., 20% off
+  FixedDiscount = 'FixedDiscount',         // e.g., $5 off
+  BuyXGetYFree = 'BuyXGetYFree',           // e.g., Buy 2 Get 1 Free
+}
+
+export interface Offer {
+  id: string;
+  name: Record<Locale, string>;
+  type: OfferType;
+  value?: number; // e.g., 20 for 20% or $20 off (optional for BuyXGetYFree)
+  buyQuantity?: number; // X for Buy X Get Y Free
+  getFreeQuantity?: number; // Y for Buy X Get Y Free
+  targetProductId: number; // The product this offer applies to
+  isActive: boolean;
+}

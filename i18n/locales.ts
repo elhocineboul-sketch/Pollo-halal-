@@ -10,6 +10,8 @@ export const translations = {
     cartAria: 'Cesta de la compra',
     addToCartButton: '➕ Añadir al carrito',
     adminLoginTitle: 'Acceso de administrador',
+    usernamePlaceholder: 'Nombre de usuario',
+    emailPlaceholder: 'Correo electrónico',
     passwordPlaceholder: 'Contraseña',
     loginButton: 'Entrar',
     cancelButton: 'Cancelar',
@@ -150,6 +152,57 @@ Rastrea tu pedido aquí: {orderTrackingLink}
     nequiStep3: '3. Envíe una captura de pantalla del recibo de pago al completar la transacción.',
     nequiStep4: '4. Espere la confirmación. Su pedido se procesará después de la verificación.',
     nequiQrCodeAria: 'Código QR para pago con Nequi',
+    // New: Low Stock Alert
+    lowStockAlert: '🚨 ¡Stock bajo para {productName}! Unidades restantes: {unitsRemaining}.',
+    // New: Dark Mode
+    darkModeOption: '🌙 Modo oscuro',
+    enableDarkMode: 'Activar modo oscuro',
+    disableDarkMode: 'Desactivar modo oscuro',
+    // New: Offer Management
+    manageOffersButton: '🏷️ Gestionar Ofertas',
+    offerManagementTitle: 'Gestión de Ofertas',
+    offerNameTableHeading: 'Nombre de la Oferta',
+    offerTypeTableHeading: 'Tipo',
+    offerValueTableHeading: 'Valor',
+    offerTargetProductTableHeading: 'Producto Objetivo',
+    offerStatusTableHeading: 'Estado',
+    addOfferButton: '➕ Añadir Nueva Oferta',
+    noOffersFound: 'No se encontraron ofertas.',
+    editOfferTitle: 'Editar Oferta',
+    createOfferTitle: 'Crear Nueva Oferta',
+    offerNamePlaceholder: 'Nombre de la Oferta',
+    selectOfferType: 'Seleccionar Tipo de Oferta',
+    selectTargetProduct: 'Seleccionar Producto Objetivo',
+    offerValuePlaceholder: 'Valor (%, $)', // Updated
+    offerActiveLabel: 'Activa',
+    saveOfferButton: '💾 Guardar Oferta',
+    percentageDiscount: 'Descuento Porcentual',
+    fixedDiscount: 'Descuento Fijo',
+    buyXGetYFree: 'Comprar X Obtener Y Gratis', // New
+    buyXPlaceholder: 'Comprar Cantidad (X)', // New
+    getYFreePlaceholder: 'Obtener Gratis (Y)', // New
+    confirmDeleteOffer: '¿Estás seguro de eliminar esta oferta?',
+    offerDeletedSuccess: '✓ Oferta eliminada',
+    offerAddedSuccess: '✓ Oferta añadida',
+    offerUpdatedSuccess: '✓ Oferta actualizada',
+    offerActive: 'Activa',
+    offerInactive: 'Inactiva',
+    productAlreadyHasOffer: '❌ El producto "{productName}" ya tiene una oferta activa.',
+    productAlreadyHasOtherActiveOffer: '❌ El producto "{productName}" ya tiene otra oferta activa.',
+    offerProductPlaceholder: 'Producto...',
+    discountBadge: '🏷️ ¡Oferta!',
+    buyXGetYFreeBadge: '🎉 ¡{buyQuantity} + {getFreeQuantity} Gratis!', // New
+    buyOneGetOneFree: '¡Compra 1 y Llévate 1 Gratis!', // kept for product card, if needed
+    discountApplied: 'Descuento Aplicado: -{value}{unit}',
+    buyXGetYFreeApplied: 'Oferta Aplicada: ¡Compre {buyQuantity} y obtenga {getFreeQuantity} gratis!', // New
+    offerValueRequired: 'El valor de la oferta es obligatorio.',
+    offerTargetProductRequired: 'El producto objetivo es obligatorio.',
+    offerNameRequired: 'El nombre de la oferta es obligatorio.',
+    buyQuantityRequired: 'La cantidad a comprar (X) es obligatoria.', // New
+    getFreeQuantityRequired: 'La cantidad a obtener gratis (Y) es obligatoria.', // New
+    logoutButton: 'Cerrar sesión', // New translation
+    loggedOutSuccess: '✓ Sesión cerrada con éxito.',
+    goToAdminPanelButton: '🚀 لوحة التحكم', // New: Go to Admin Panel
   },
   en: {
     appName: 'Pollo Halal',
@@ -160,6 +213,8 @@ Rastrea tu pedido aquí: {orderTrackingLink}
     cartAria: 'Shopping cart',
     addToCartButton: '➕ Add to Cart',
     adminLoginTitle: 'Admin Login',
+    usernamePlaceholder: 'Username',
+    emailPlaceholder: 'Email',
     passwordPlaceholder: 'Password',
     loginButton: 'Login',
     cancelButton: 'Cancel',
@@ -300,6 +355,57 @@ Thank you for your purchase!`,
     nequiStep3: '3. Send a screenshot of the payment receipt after completing the transaction.',
     nequiStep4: '4. Await confirmation. Your order will be processed after verification.',
     nequiQrCodeAria: 'QR Code for Nequi payment',
+    // New: Low Stock Alert
+    lowStockAlert: '🚨 Low stock for {productName}! Units remaining: {unitsRemaining}.',
+    // New: Dark Mode
+    darkModeOption: '🌙 Dark Mode',
+    enableDarkMode: 'Enable Dark Mode',
+    disableDarkMode: 'Disable Dark Mode',
+    // New: Offer Management
+    manageOffersButton: '🏷️ Manage Offers',
+    offerManagementTitle: 'Offer Management',
+    offerNameTableHeading: 'Offer Name',
+    offerTypeTableHeading: 'Type',
+    offerValueTableHeading: 'Value',
+    offerTargetProductTableHeading: 'Target Product',
+    offerStatusTableHeading: 'Status',
+    addOfferButton: '➕ Add New Offer',
+    noOffersFound: 'No offers found.',
+    editOfferTitle: 'Edit Offer',
+    createOfferTitle: 'Create New Offer',
+    offerNamePlaceholder: 'Offer Name',
+    selectOfferType: 'Select Offer Type',
+    selectTargetProduct: 'Select Target Product',
+    offerValuePlaceholder: 'Value (%, $)', // Updated
+    offerActiveLabel: 'Active',
+    saveOfferButton: '💾 Save Offer',
+    percentageDiscount: 'Percentage Discount',
+    fixedDiscount: 'Fixed Discount',
+    buyXGetYFree: 'Buy X Get Y Free', // New
+    buyXPlaceholder: 'Buy Quantity (X)', // New
+    getYFreePlaceholder: 'Get Free (Y)', // New
+    confirmDeleteOffer: 'Are you sure you want to delete this offer?',
+    offerDeletedSuccess: '✓ Offer deleted',
+    offerAddedSuccess: '✓ Offer added',
+    offerUpdatedSuccess: '✓ Offer updated',
+    offerActive: 'Active',
+    offerInactive: 'Inactive',
+    productAlreadyHasOffer: '❌ Product "{productName}" already has an active offer.',
+    productAlreadyHasOtherActiveOffer: '❌ Product "{productName}" already has another active offer.',
+    offerProductPlaceholder: 'Product...',
+    discountBadge: '🏷️ Offer!',
+    buyXGetYFreeBadge: '🎉 Buy {buyQuantity} Get {getFreeQuantity} Free!', // New
+    buyOneGetOneFree: 'Buy 1 Get 1 Free!', // kept for product card, if needed
+    discountApplied: 'Discount Applied: -{value}{unit}',
+    buyXGetYFreeApplied: 'Offer Applied: Buy {buyQuantity} Get {getFreeQuantity} Free!', // New
+    offerValueRequired: 'Offer value is required.',
+    offerTargetProductRequired: 'Target product is required.',
+    offerNameRequired: 'Offer name is required.',
+    buyQuantityRequired: 'Buy quantity (X) is required.', // New
+    getFreeQuantityRequired: 'Get free quantity (Y) is required.', // New
+    logoutButton: 'Logout', // New translation
+    loggedOutSuccess: '✓ Logged out successfully.',
+    goToAdminPanelButton: '🚀 Admin Panel', // New: Go to Admin Panel
   },
   ar: {
     appName: 'Pollo Halal',
@@ -310,6 +416,8 @@ Thank you for your purchase!`,
     cartAria: 'السلة',
     addToCartButton: '➕ أضف إلى السلة',
     adminLoginTitle: 'تسجيل دخول المشرف',
+    usernamePlaceholder: 'اسم المستخدم',
+    emailPlaceholder: 'البريد الإلكتروني',
     passwordPlaceholder: 'كلمة المرور',
     loginButton: 'دخول',
     cancelButton: 'إلغاء',
@@ -450,6 +558,57 @@ Thank you for your purchase!`,
     nequiStep3: '3. التقط لقطة شاشة لإيصال الدفع وأرسلها لنا بعد إتمام المعاملة.',
     nequiStep4: '4. انتظر التأكيد. سيتم معالجة طلبك بعد التحقق.',
     nequiQrCodeAria: 'رمز QR للدفع عبر Nequi',
+    // New: Low Stock Alert
+    lowStockAlert: '🚨 مخزون منخفض لـ {productName}! الوحدات المتبقية: {unitsRemaining}.',
+    // New: Dark Mode
+    darkModeOption: '🌙 الوضع الليلي',
+    enableDarkMode: 'تفعيل الوضع الليلي',
+    disableDarkMode: 'تعطيل الوضع الليلي',
+    // New: Offer Management
+    manageOffersButton: '🏷️ إدارة العروض',
+    offerManagementTitle: 'إدارة العروض',
+    offerNameTableHeading: 'اسم العرض',
+    offerTypeTableHeading: 'النوع',
+    offerValueTableHeading: 'القيمة',
+    offerTargetProductTableHeading: 'المنتج المستهدف',
+    offerStatusTableHeading: 'الحالة',
+    addOfferButton: '➕ إضافة عرض جديد',
+    noOffersFound: 'لم يتم العثور على عروض.',
+    editOfferTitle: 'تعديل العرض',
+    createOfferTitle: 'إنشاء عرض جديد',
+    offerNamePlaceholder: 'اسم العرض',
+    selectOfferType: 'تحديد نوع العرض',
+    selectTargetProduct: 'تحديد المنتج المستهدف',
+    offerValuePlaceholder: 'القيمة (%, $)', // Updated
+    offerActiveLabel: 'نشط',
+    saveOfferButton: '💾 حفظ العرض',
+    percentageDiscount: 'خصم بالمئة',
+    fixedDiscount: 'خصم ثابت',
+    buyXGetYFree: 'اشتر X واحصل على Y مجاناً', // New
+    buyXPlaceholder: 'كمية الشراء (X)', // New
+    getYFreePlaceholder: 'الكمية المجانية (Y)', // New
+    confirmDeleteOffer: 'هل أنت متأكد من حذف هذا العرض؟',
+    offerDeletedSuccess: '✓ تم حذف العرض',
+    offerAddedSuccess: '✓ تم إضافة العرض',
+    offerUpdatedSuccess: '✓ تم تحديث العرض',
+    offerActive: 'نشط',
+    offerInactive: 'غير نشط',
+    productAlreadyHasOffer: '❌ المنتج "{productName}" لديه عرض نشط بالفعل.',
+    productAlreadyHasOtherActiveOffer: '❌ المنتج "{productName}" لديه عرض نشط آخر بالفعل.',
+    offerProductPlaceholder: 'منتج...',
+    discountBadge: '🏷️ عرض!',
+    buyXGetYFreeBadge: '🎉 اشترِ {buyQuantity} واحصل على {getFreeQuantity} مجاناً!', // New
+    buyOneGetOneFree: 'اشترِ 1 واحصل على 1 مجاناً!',
+    discountApplied: 'تم تطبيق الخصم: -{value}{unit}',
+    buyXGetYFreeApplied: 'تم تطبيق العرض: اشترِ {buyQuantity} واحصل على {getFreeQuantity} مجاناً!', // New
+    offerValueRequired: 'قيمة العرض مطلوبة.',
+    offerTargetProductRequired: 'المنتج المستهدف مطلوب.',
+    offerNameRequired: 'اسم العرض مطلوب.',
+    buyQuantityRequired: 'كمية الشراء (X) مطلوبة.', // New
+    getFreeQuantityRequired: 'الكمية المجانية (Y) مطلوبة.', // New
+    logoutButton: 'تسجيل خروج', // New translation
+    loggedOutSuccess: '✓ تم تسجيل الخروج بنجاح.',
+    goToAdminPanelButton: '🚀 لوحة التحكم', // New: Go to Admin Panel
   },
 };
 
