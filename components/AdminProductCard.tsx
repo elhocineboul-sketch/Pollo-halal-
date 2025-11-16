@@ -23,7 +23,7 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({ product, onEdit, on
   return (
     <div className="bg-white rounded-2xl p-4 m-4 shadow-sm text-end dark:bg-gray-800 dark:text-white"> {/* Changed text-right to text-end */}
       <div className="flex gap-4 mb-4">
-        <img src={product.img} alt={productName} className="w-20 h-20 object-contain rounded-xl bg-gray-100 dark:bg-gray-700" />
+        <img src={product.img} alt={productName} className="w-20 h-20 object-contain rounded-xl bg-gray-100 dark:bg-gray-700" loading="lazy" decoding="async" />
         <div className="flex-1">
           <div className="font-bold text-lg mb-1">{productName}</div>
           <div className="text-gray-600 text-sm dark:text-gray-400">{productDesc}</div>
@@ -58,4 +58,4 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({ product, onEdit, on
   );
 };
 
-export default AdminProductCard;
+export default React.memo(AdminProductCard);

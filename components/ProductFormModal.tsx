@@ -272,4 +272,4 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   );
 };
 
-export default ProductFormModal;
+export default React.memo(ProductFormModal);

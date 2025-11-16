@@ -88,15 +88,10 @@ export const useProducts = () => {
     try {
       setLoading(true);
       const productRef = doc(db, 'products', id);
-      // Ensure name and desc are valid objects if provided for update
-      const updatedData: Partial<Product> = { ...productData };
-      if (productData.name) {
-        updatedData.name = productData.name;
-      }
-      if (productData.desc) {
-        updatedData.desc = productData.desc;
-      }
-      await updateDoc(productRef, updatedData);
+      // Create a copy of the data and remove the 'id' property before updating,
+      // as the document ID cannot be changed.
+      const { id: _id, ...dataToUpdate } = productData;
+      await updateDoc(productRef, dataToUpdate);
       setLoading(false);
       return true;
     } catch (e) {

@@ -207,6 +207,14 @@ Rastrea tu pedido aquí: {orderTrackingLink}
     loggedOutSuccess: '✓ Sesión cerrada con éxito.',
     goToAdminPanelButton: '🚀 لوحة التحكم', // New: Go to Admin Panel
     loading: 'Cargando', // New
+    // Gemini Recipe Feature
+    smartChefButton: 'Asistente de Chef Inteligente',
+    getRecipeSuggestion: 'Obtener sugerencia de receta',
+    recipeModalTitle: 'Sugerencia del Chef',
+    recipeLoading: 'Nuestro chef está pensando... 🧑‍🍳',
+    recipeError: 'Lo sentimos, el chef está ocupado en este momento. Por favor, inténtelo de nuevo más tarde.',
+    cartIsEmptyForChef: '¡Añade artículos a tu carrito para obtener una receta!',
+    geminiPrompt: 'Actúa como un chef experto. Tengo los siguientes productos de pollo en mi carrito de compras: {cartContents}. Sugiere una receta deliciosa y fácil de seguir que pueda hacer con estos artículos. Proporciona una lista de ingredientes adicionales que podría necesitar y las instrucciones paso a paso. La receta debe estar en {locale}. Formatea la respuesta en Markdown con encabezados para "Ingredientes" e "Instrucciones".',
   },
   en: {
     appName: 'Pollo Halal',
@@ -414,6 +422,14 @@ Thank you for your purchase!`,
     loggedOutSuccess: '✓ Logged out successfully.',
     goToAdminPanelButton: '🚀 Admin Panel', // New: Go to Admin Panel
     loading: 'Loading', // New
+    // Gemini Recipe Feature
+    smartChefButton: 'Smart Chef Assistant',
+    getRecipeSuggestion: 'Get Recipe Suggestion',
+    recipeModalTitle: "Chef's Suggestion",
+    recipeLoading: "Our chef is thinking... 🧑‍🍳",
+    recipeError: "Sorry, the chef is busy right now. Please try again later.",
+    cartIsEmptyForChef: "Add items to your cart to get a recipe!",
+    geminiPrompt: 'Act as an expert chef. I have the following chicken products in my shopping cart: {cartContents}. Suggest a delicious and easy-to-follow recipe I can make with these items. Provide a list of additional ingredients I might need and the step-by-step instructions. The recipe should be in {locale}. Format the response in Markdown with headings for "Ingredients" and "Instructions".',
   },
   ar: {
     appName: 'Pollo Halal',
@@ -621,6 +637,14 @@ Thank you for your purchase!`,
     loggedOutSuccess: '✓ تم تسجيل الخروج بنجاح.',
     goToAdminPanelButton: '🚀 لوحة التحكم', // New: Go to Admin Panel
     loading: 'جار التحميل', // New
+    // Gemini Recipe Feature
+    smartChefButton: 'مساعد الشيف الذكي',
+    getRecipeSuggestion: 'احصل على اقتراح وصفة',
+    recipeModalTitle: 'اقتراح الشيف',
+    recipeLoading: 'الشيف يفكر... 🧑‍🍳',
+    recipeError: 'عذراً، الشيف مشغول الآن. يرجى المحاولة مرة أخرى لاحقاً.',
+    cartIsEmptyForChef: 'أضف منتجات إلى سلتك للحصول على وصفة!',
+    geminiPrompt: 'تصرف كطاهٍ خبير. لدي منتجات الدجاج التالية في عربة التسوق الخاصة بي: {cartContents}. اقترح وصفة لذيذة وسهلة المتابعة يمكنني تحضيرها بهذه المنتجات. قدم قائمة بالمكونات الإضافية التي قد أحتاجها والتعليمات خطوة بخطوة. يجب أن تكون الوصفة باللغة {locale}. نسق الرد باستخدام الماركداون مع عناوين لـ "المكونات" و "التعليمات".',
   },
 };
 

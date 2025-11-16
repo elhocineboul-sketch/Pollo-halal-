@@ -42,7 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, offers 
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-md active:scale-95 transition-transform duration-150 dark:bg-gray-800">
       <div className="bg-amber-500 p-5 h-40 flex items-center justify-center relative">
-        <img src={product.img} alt={productName} className="w-32 h-32 object-contain drop-shadow-md" />
+        <img src={product.img} alt={productName} className="w-32 h-32 object-contain drop-shadow-md" loading="lazy" decoding="async" />
         {offerBadge && <div className={`absolute ${locale === 'ar' ? 'left-2' : 'right-2'} top-2`}>{offerBadge}</div>}
       </div>
       <div className="p-4 text-end"> {/* Changed text-right to text-end */}
@@ -67,4 +67,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, offers 
   );
 };
 
-export default ProductCard;
+export default React.memo(ProductCard);

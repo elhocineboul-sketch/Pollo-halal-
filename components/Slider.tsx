@@ -21,6 +21,8 @@ const Slider: React.FC<SliderProps> = ({ images }) => {
           key={index}
           src={imgSrc}
           alt={`Slide ${index + 1}`}
+          loading="lazy"
+          decoding="async"
           className={`w-full h-full object-cover absolute top-0 left-0 transition-all duration-700 ease-in-out transform-gpu ${
             index === currentSlide ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
           }`}
@@ -41,4 +43,4 @@ const Slider: React.FC<SliderProps> = ({ images }) => {
   );
 };
 
-export default Slider;
+export default React.memo(Slider);

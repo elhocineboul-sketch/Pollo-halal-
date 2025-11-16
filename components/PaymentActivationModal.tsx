@@ -99,4 +99,4 @@ const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
   );
 };
 
-export default PaymentActivationModal;
+export default React.memo(PaymentActivationModal);

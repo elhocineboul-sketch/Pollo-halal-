@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import Button from './Button';
-import { CartItem, CustomerOrderDetails, Offer, OfferType } from '../types'; // Import CustomerOrderDetails, Offer, OfferType
+import { CartItem, CustomerOrderDetails, Offer, OfferType } from '../types';
 import { useTranslation, useLocale } from '../i18n/LocaleContext';
+import { GoogleGenAI } from '@google/genai';
+import RecipeModal from './RecipeModal'; // New component for displaying recipes
 
 export interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: string, newQuantity: number) => void; // Changed productId to string
-  onRemoveItem: (productId: string) => void; // Changed productId to string
-  onPurchase: (customerDetails: CustomerOrderDetails, paymentMethod: 'COD' | 'Online' | 'Nequi', sendWhatsApp: boolean, sendEmail: boolean) => void; // Updated signature
-  isCODEnabled: boolean; // New prop
-  isOnlinePaymentEnabled: boolean; // New prop
-  isNequiEnabled: boolean; // New prop for Nequi
-  offers: Offer[]; // New prop for offers
+  onUpdateQuantity: (productId: string, newQuantity: number) => void;
+  onRemoveItem: (productId: string) => void;
+  onPurchase: (customerDetails: CustomerOrderDetails, paymentMethod: 'COD' | 'Online' | 'Nequi', sendWhatsApp: boolean, sendEmail: boolean) => void;
+  isCODEnabled: boolean;
+  isOnlinePaymentEnabled: boolean;
+  isNequiEnabled: boolean;
+  offers: Offer[];
 }
 
 const CartModal: React.FC<CartModalProps> = ({
@@ -24,23 +26,25 @@ const CartModal: React.FC<CartModalProps> = ({
   onUpdateQuantity,
   onRemoveItem,
   onPurchase,
-  isCODEnabled, // Destructure new prop
-  isOnlinePaymentEnabled, // Destructure new prop
-  isNequiEnabled, // Destructure new prop
-  offers, // Destructure new prop
+  isCODEnabled,
+  isOnlinePaymentEnabled,
+  isNequiEnabled,
+  offers,
 }) => {
   const t = useTranslation();
-  const { locale } = useLocale(); // Get current locale
+  const { locale } = useLocale();
 
-  // Calculate total amount dynamically considering offers
+  const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
+  const [recipe, setRecipe] = useState('');
+  const [isRecipeLoading, setIsRecipeLoading] = useState(false);
+  const [recipeError, setRecipeError] = useState<string | null>(null);
+
   const totalAmount = cartItems.reduce((sum, item) => {
     const activeOffer = item.product.activeOfferId
       ? offers.find(o => o.id === item.product.activeOfferId && o.isActive)
       : undefined;
-
     let effectivePrice = item.product.sale;
     let effectiveQuantity = item.quantity;
-
     if (activeOffer) {
       if (activeOffer.type === OfferType.PercentageDiscount) {
         effectivePrice = item.product.sale * (1 - activeOffer.value! / 100);
@@ -50,7 +54,6 @@ const CartModal: React.FC<CartModalProps> = ({
         const buyX = activeOffer.buyQuantity || 0;
         const getY = activeOffer.getFreeQuantity || 0;
         if (buyX > 0 && getY >= 0) {
-          // Calculate paid quantity: total quantity - (number of bundles * free items per bundle)
           effectiveQuantity = item.quantity - (Math.floor(item.quantity / (buyX + getY)) * getY);
         }
       }
@@ -58,46 +61,71 @@ const CartModal: React.FC<CartModalProps> = ({
     return sum + effectivePrice * effectiveQuantity;
   }, 0);
 
-
   const [sendInvoiceWhatsApp, setSendInvoiceWhatsApp] = useState(false);
   const [sendInvoiceEmail, setSendInvoiceEmail] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'COD' | 'Online' | 'Nequi' | null>(null); // Updated state for payment method
-
-  // Multi-step form state
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1); // 1: Cart + Customer Info, 2: Confirmation
-
-  // Customer details state
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'COD' | 'Online' | 'Nequi' | null>(null);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
 
   useEffect(() => {
-    // Reset all states when modal closes or opens
     if (!isOpen) {
       setSendInvoiceWhatsApp(false);
       setSendInvoiceEmail(false);
-      setCurrentStep(1); // Reset to first step
+      setCurrentStep(1);
       setCustomerName('');
       setCustomerPhone('');
       setCustomerEmail('');
       setCustomerAddress('');
-      setSelectedPaymentMethod(null); // Reset payment method
+      setSelectedPaymentMethod(null);
+      setIsRecipeModalOpen(false); // Close recipe modal when cart closes
     } else {
-      // Auto-select payment method if only one is enabled
       const enabledMethods = [
         isCODEnabled && 'COD',
         isOnlinePaymentEnabled && 'Online',
         isNequiEnabled && 'Nequi'
-      ].filter(Boolean); // Filter out false/null values
-
+      ].filter(Boolean);
       if (enabledMethods.length === 1) {
         setSelectedPaymentMethod(enabledMethods[0] as 'COD' | 'Online' | 'Nequi');
       } else {
-        setSelectedPaymentMethod(null); // No auto-selection if multiple or none are enabled
+        setSelectedPaymentMethod(null);
       }
     }
   }, [isOpen, isCODEnabled, isOnlinePaymentEnabled, isNequiEnabled]);
+
+  const handleGetRecipe = async () => {
+    if (cartItems.length === 0) {
+      alert(t('cartIsEmptyForChef'));
+      return;
+    }
+    setIsRecipeLoading(true);
+    setRecipeError(null);
+    setRecipe('');
+    setIsRecipeModalOpen(true);
+
+    const cartContents = cartItems.map(item => `${item.quantity} x ${item.product.name[locale] || item.product.name.es}`).join(', ');
+    const prompt = t('geminiPrompt', {
+      cartContents,
+      locale: new Intl.DisplayNames([locale], { type: 'language' }).of(locale) || 'current',
+    });
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      setRecipe(response.text);
+    } catch (error) {
+      console.error('Error getting recipe from Gemini:', error);
+      setRecipeError(t('recipeError'));
+    } finally {
+      setIsRecipeLoading(false);
+    }
+  };
+
 
   const handleProceedToOrder = () => {
     if (!customerName || !customerPhone || !customerEmail || !customerAddress) {
@@ -108,12 +136,11 @@ const CartModal: React.FC<CartModalProps> = ({
       alert(t('paymentMethodRequiredError'));
       return;
     }
-    setCurrentStep(2); // Move to confirmation step
+    setCurrentStep(2);
   };
 
   const handleConfirmFinalOrder = () => {
     if (!selectedPaymentMethod) {
-      // This should ideally be caught by handleProceedToOrder, but as a safeguard
       alert(t('paymentMethodRequiredError'));
       return;
     }
@@ -127,15 +154,13 @@ const CartModal: React.FC<CartModalProps> = ({
   };
 
   const renderCartItems = () => (
-    <div className="space-y-4 mb-5 max-h-60 overflow-y-auto pr-2"> {/* Added pr-2 for scrollbar spacing */}
+    <div className="space-y-4 mb-5 max-h-60 overflow-y-auto pr-2">
       {cartItems.map((item) => {
         const activeOffer = item.product.activeOfferId
           ? offers.find(o => o.id === item.product.activeOfferId && o.isActive)
           : undefined;
-
         let itemPriceDisplay = item.product.sale.toFixed(2);
         let offerText = null;
-
         if (activeOffer) {
           if (activeOffer.type === OfferType.PercentageDiscount) {
             const discountedPrice = item.product.sale * (1 - activeOffer.value! / 100);
@@ -146,17 +171,15 @@ const CartModal: React.FC<CartModalProps> = ({
             itemPriceDisplay = `${discountedPrice.toFixed(2)}`;
             offerText = t('discountApplied', { value: activeOffer.value!.toFixed(2), unit: '$' });
           } else if (activeOffer.type === OfferType.BuyXGetYFree) {
-            // Price is still per unit, but quantity for total calculation is different
-            itemPriceDisplay = item.product.sale.toFixed(2); // Display original price per unit
+            itemPriceDisplay = item.product.sale.toFixed(2);
             offerText = t('buyXGetYFreeApplied', { buyQuantity: activeOffer.buyQuantity, getFreeQuantity: activeOffer.getFreeQuantity });
           }
         }
-
         return (
           <div key={item.product.id} className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl shadow-sm dark:bg-gray-700">
             <img src={item.product.img} alt={item.product.name[locale] || item.product.name.es} className="w-16 h-16 object-contain rounded-lg" />
             <div className="flex-1 text-end">
-              <div className="font-bold text-sm dark:text-white">{item.product.name[locale] || item.product.name.es || item.product.name.en || 'N/A'}</div>
+              <div className="font-bold text-sm dark:text-white">{item.product.name[locale] || item.product.name.es || 'N/A'}</div>
               <div className="text-gray-600 text-xs dark:text-gray-400">
                 {activeOffer && activeOffer.type !== OfferType.BuyXGetYFree && (
                   <span className="line-through mr-1">${item.product.sale.toFixed(2)}</span>
@@ -270,7 +293,7 @@ const CartModal: React.FC<CartModalProps> = ({
             <span className="ml-3 text-base font-medium text-gray-800 dark:text-white">{t('onlineOptionLabel')}</span>
           </label>
         )}
-        {isNequiEnabled && ( // New Nequi payment option
+        {isNequiEnabled && (
           <label className="flex items-center p-3 bg-gray-100 rounded-xl cursor-pointer dark:bg-gray-700">
             <input
               type="radio"
@@ -285,128 +308,79 @@ const CartModal: React.FC<CartModalProps> = ({
           </label>
         )}
       </div>
-
-      {selectedPaymentMethod === 'Nequi' && ( // Display Nequi instructions if selected
+      {selectedPaymentMethod === 'Nequi' && (
         <div className="bg-gray-100 p-4 rounded-xl text-start mt-4 mb-5 shadow-inner dark:bg-gray-700 dark:text-gray-200">
           <h4 className="text-lg font-bold mb-3 text-center dark:text-white">{t('nequiInstructionsTitle')}</h4>
           <p className="text-gray-700 mb-2 dark:text-gray-300">{t('nequiStep1')}</p>
           <p className="text-gray-700 mb-2 dark:text-gray-300">{t('nequiStep2')}</p>
           <p className="text-gray-700 mb-2 dark:text-gray-300">{t('nequiStep3')}</p>
-          <p className="text-gray-700 mb-4 dark:text-gray-300">{t('nequiStep4')}</p>
-          <div className="flex justify-center">
-            <img
-              src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.nequi.com/" // Placeholder QR
-              alt={t('nequiQrCodeAria')}
-              className="w-36 h-36 p-2 bg-white rounded-lg shadow-md border border-gray-200 dark:bg-gray-600 dark:border-gray-500"
-            />
-          </div>
+          <p className="text-gray-700 mb-2 dark:text-gray-300">{t('nequiStep4')}</p>
+          <img src="https://www.nequi.com.co/wp-content/uploads/2021/07/qr-nequi.png" alt={t('nequiQrCodeAria')} className="w-36 h-36 mx-auto mt-3 rounded-lg border-4 border-white shadow-lg" />
         </div>
       )}
     </>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t('cartTitle')}>
-      {cartItems.length === 0 ? (
-        <p className="text-center text-gray-500 mb-5 dark:text-gray-400">{t('cartEmptyMessage')}</p>
-      ) : (
-        <>
-          {currentStep === 1 && ( // Step 1: Cart Review + Customer Info Input
-            <>
-              {renderCartItems()}
-              {renderTotalAmount()}
-              {renderInvoiceOptions()}
-              {renderPaymentMethodSelection()} {/* New payment method selection */}
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={t('cartTitle')}>
+        {cartItems.length === 0 ? (
+          <p className="text-center text-gray-500 dark:text-gray-400">{t('cartEmptyMessage')}</p>
+        ) : (
+          <>
+            {currentStep === 1 && (
+              <>
+                {renderCartItems()}
+                {renderTotalAmount()}
+                <h3 className="text-lg font-bold text-center mb-4 dark:text-white">{t('customerInfoTitle')}</h3>
+                <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder={t('customerNamePlaceholder')} className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white" />
+                <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder={t('customerPhonePlaceholder')} className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white" />
+                <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder={t('customerEmailPlaceholder')} className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white" />
+                <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder={t('customerAddressPlaceholder')} className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white" />
+                {renderPaymentMethodSelection()}
+                <Button onClick={handleProceedToOrder} className="mb-2 w-full">{t('proceedToOrderButton')}</Button>
+              </>
+            )}
+            {currentStep === 2 && (
+              <>
+                <h3 className="text-lg font-bold text-center mb-4 dark:text-white">{t('customerDetailsSummaryTitle')}</h3>
+                <div className="bg-gray-50 p-4 rounded-xl mb-4 text-end space-y-2 dark:bg-gray-700 dark:text-white">
+                  <div><strong>{t('customerNamePlaceholder')}:</strong> {customerName}</div>
+                  <div><strong>{t('customerPhonePlaceholder')}:</strong> {customerPhone}</div>
+                  <div><strong>{t('customerEmailPlaceholder')}:</strong> {customerEmail}</div>
+                  <div><strong>{t('customerAddressPlaceholder')}:</strong> {customerAddress}</div>
+                  <div><strong>{t('paymentMethodLabel')}:</strong> {selectedPaymentMethod}</div>
+                </div>
+                {renderTotalAmount()}
+                {renderInvoiceOptions()}
+                <Button onClick={handleConfirmFinalOrder} className="mb-2 w-full">{t('confirmOrderButton')}</Button>
+                <Button variant="secondary" onClick={() => setCurrentStep(1)} className="w-full">{t('backButton')}</Button>
+              </>
+            )}
+          </>
+        )}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            onClick={handleGetRecipe}
+            className="w-full bg-gradient-to-r from-teal-400 to-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cartItems.length === 0}
+            title={cartItems.length === 0 ? t('cartIsEmptyForChef') : t('getRecipeSuggestion')}
+          >
+            🧑‍🍳 {t('smartChefButton')}
+          </Button>
+        </div>
+        <Button variant="secondary" onClick={onClose} className="mt-4 w-full">{t('closeCartButton')}</Button>
+      </Modal>
 
-              {/* Customer Information Input */}
-              <h3 className="text-lg font-bold text-center mb-4 mt-6 dark:text-white">{t('customerInfoTitle')}</h3>
-              <input
-                type="text"
-                className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                placeholder={t('customerNamePlaceholder')}
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-              <input
-                type="tel" // Use type="tel" for phone numbers
-                className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                placeholder={t('customerPhonePlaceholder')}
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-              />
-              <input
-                type="email" // Use type="email" for email addresses
-                className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                placeholder={t('customerEmailPlaceholder')}
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-              />
-              <input
-                type="text"
-                className="w-full p-3 rounded-xl border-none bg-gray-100 mb-5 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                placeholder={t('customerAddressPlaceholder')}
-                value={customerAddress}
-                onChange={(e) => setCustomerAddress(e.target.value)}
-              />
-
-              <Button onClick={handleProceedToOrder} className="w-full bg-amber-500 text-black hover:bg-amber-600 transition-colors">
-                {t('proceedToOrderButton')}
-              </Button>
-            </>
-          )}
-
-          {currentStep === 2 && ( // Step 2: Order Summary & Confirmation
-            <>
-              <h3 className="text-xl font-bold text-center mb-5 dark:text-white">{t('cartTitle')}</h3>
-              {renderCartItems()}
-              {renderTotalAmount()}
-
-              {/* Customer Details Summary */}
-              <h3 className="text-lg font-bold text-center mb-4 mt-6 dark:text-white">{t('customerDetailsSummaryTitle')}</h3>
-              <div className="bg-gray-100 p-4 rounded-xl mb-6 text-end dark:bg-gray-700 dark:text-white">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-gray-600 text-sm dark:text-gray-300">{t('customerNamePlaceholder')}:</span>
-                  <span className="font-bold text-base">{customerName}</span>
-                </div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-gray-600 text-sm dark:text-gray-300">{t('customerPhonePlaceholder')}:</span>
-                  <span className="font-bold text-base">{customerPhone}</span>
-                </div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-gray-600 text-sm dark:text-gray-300">{t('customerEmailPlaceholder')}:</span>
-                  <span className="font-bold text-base">{customerEmail}</span>
-                </div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-gray-600 text-sm dark:text-gray-300">{t('customerAddressPlaceholder')}:</span>
-                  <span className="font-bold text-base">{customerAddress}</span>
-                </div>
-                <div className="flex justify-between items-center mb-1 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                  <span className="text-gray-600 text-sm font-medium dark:text-gray-300">{t('paymentMethodLabel')}</span>
-                  <span className="font-bold text-base">
-                    {selectedPaymentMethod === 'COD' ? t('codOptionLabel') :
-                     selectedPaymentMethod === 'Online' ? t('onlineOptionLabel') :
-                     t('nequiPaymentLabel')}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 text-sm font-medium dark:text-gray-300">{t('expectedDeliveryLabel')}</span>
-                  <span className="font-bold text-base">{t('deliveryTime')}</span>
-                </div>
-              </div>
-
-              <Button onClick={handleConfirmFinalOrder} className="w-full bg-amber-500 text-black hover:bg-amber-600 transition-colors mb-3">
-                {t('confirmOrderButton')}
-              </Button>
-              <Button variant="secondary" onClick={() => setCurrentStep(1)} className="w-full">
-                {t('backButton')}
-              </Button>
-            </>
-          )}
-        </>
-      )}
-      <Button variant="secondary" onClick={onClose} className="mt-4 w-full">{t('closeCartButton')}</Button>
-    </Modal>
+      <RecipeModal
+        isOpen={isRecipeModalOpen}
+        onClose={() => setIsRecipeModalOpen(false)}
+        recipe={recipe}
+        isLoading={isRecipeLoading}
+        error={recipeError}
+      />
+    </>
   );
 };
 
-export default CartModal;
+export default React.memo(CartModal);

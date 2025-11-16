@@ -1,20 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import { Product, Screen, CartItem, ToastMessage, Locale, Customer, Order, CustomerOrderDetails, OrderConfirmationDetails, Offer, OfferType } from './types';
 import Home from './screens/Home';
-import Admin from './screens/Admin';
-import ProductFormModal from './components/ProductFormModal';
-import PaymentActivationModal from './components/PaymentActivationModal';
-import CartModal from './components/CartModal';
 import Toast from './components/Toast';
-import SettingsModal from './components/SettingsModal'; // Import new SettingsModal
-import Customers from './screens/Customers'; // Import new Customers screen
-import CustomerOrdersModal from './components/CustomerOrdersModal'; // Import new CustomerOrdersModal
-import OrderConfirmationModal from './components/OrderConfirmationModal'; // Import new OrderConfirmationModal
-import OfferManagementModal from './components/OfferManagementModal'; // Import new OfferManagementModal
-import OfferFormModal from './components/OfferFormModal'; // Import new OfferFormModal
-import { LocaleProvider, useTranslation, useLocale } from './i18n/LocaleContext'; // Import LocaleProvider and hooks
-import { useProducts } from './useProducts'; // Import the new useProducts hook
-import { serverTimestamp } from 'firebase/firestore'; // Import serverTimestamp
+import { LocaleProvider, useTranslation, useLocale } from './i18n/LocaleContext';
+import { useProducts } from './useProducts';
+import { serverTimestamp } from 'firebase/firestore';
+
+// Lazy-load components that are not needed on initial render
+const Admin = lazy(() => import('./screens/Admin'));
+const Customers = lazy(() => import('./screens/Customers'));
+const ProductFormModal = lazy(() => import('./components/ProductFormModal'));
+const PaymentActivationModal = lazy(() => import('./components/PaymentActivationModal'));
+const CartModal = lazy(() => import('./components/CartModal'));
+const SettingsModal = lazy(() => import('./components/SettingsModal'));
+const CustomerOrdersModal = lazy(() => import('./components/CustomerOrdersModal'));
+const OrderConfirmationModal = lazy(() => import('./components/OrderConfirmationModal'));
+const OfferManagementModal = lazy(() => import('./components/OfferManagementModal'));
+const OfferFormModal = lazy(() => import('./components/OfferFormModal'));
 
 // Dummy customers for initial state - Changed to empty array
 const initialCustomers: Customer[] = [];
@@ -45,10 +47,6 @@ const AppContent: React.FC = () => {
     try {
       const storedOffers = localStorage.getItem('offers');
       let loadedOffers: Offer[] = storedOffers ? JSON.parse(storedOffers) : [];
-
-      // Migration: Convert old TwoForOne offers to BuyXGetYFree
-      // Replaced OfferType.TwoForOne with its string literal to resolve TypeScript error.
-      // Casting offer.type to 'string' allows comparison with the literal 'TwoForOne' for migration.
       loadedOffers = loadedOffers.map(offer => {
         if ((offer.type as string) === 'TwoForOne') { 
           console.warn(`Migrating TwoForOne offer (id: ${offer.id}) to BuyXGetYFree (Buy 2 Get 1 Free).`);
@@ -57,12 +55,11 @@ const AppContent: React.FC = () => {
             type: OfferType.BuyXGetYFree,
             buyQuantity: 2,
             getFreeQuantity: 1,
-            value: undefined, // Remove old 'value' property as it's not applicable
+            value: undefined,
           };
         }
         return offer;
       });
-
       return loadedOffers;
     } catch (error) {
       console.error("Error loading offers from localStorage:", error);
@@ -91,45 +88,31 @@ const AppContent: React.FC = () => {
 
 
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.Home);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false); // New state for SettingsModal
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isProductFormModalOpen, setIsProductFormModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isPaymentActivationModalOpen, setIsPaymentActivationModalOpen] = useState(false);
-  // isCODEnabled and isOnlinePaymentEnabled are kept for admin panel, but not passed to CartModal anymore
   const [isCODEnabled, setIsCODEnabled] = useState(true);
   const [isOnlinePaymentEnabled, setIsOnlinePaymentEnabled] = useState(true);
-  const [isNequiEnabled, setIsNequiEnabled] = useState(false); // New state for Nequi payment
+  const [isNequiEnabled, setIsNequiEnabled] = useState(false);
 
-  // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
-
-  // Toast state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
-  // Customer Orders Modal state
   const [isCustomerOrdersModalOpen, setIsCustomerOrdersModalOpen] = useState(false);
   const [selectedCustomerForOrders, setSelectedCustomerForOrders] = useState<Customer | null>(null);
-
-  // Order Confirmation Modal state
   const [isOrderConfirmationModalOpen, setIsOrderConfirmationModalOpen] = useState(false);
   const [lastOrderDetails, setLastOrderDetails] = useState<OrderConfirmationDetails | null>(null);
-
-  // Ref to keep track of products for which a low stock alert has been shown
-  const alertedLowStockProductIds = useRef<Set<string>>(new Set()); // Changed to string
-
-  // Dark Mode state
+  const alertedLowStockProductIds = useRef<Set<string>>(new Set());
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
       const storedDarkMode = localStorage.getItem('isDarkMode');
-      return storedDarkMode ? JSON.parse(storedDarkMode) : false; // Default to light mode
+      return storedDarkMode ? JSON.parse(storedDarkMode) : false;
     } catch (error) {
       console.error("Error loading dark mode preference from localStorage:", error);
       return false;
     }
   });
-
-  // Admin Login State: Keeps track if an admin is logged in
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
     try {
       const storedAdminLogin = localStorage.getItem('isAdminLoggedIn');
@@ -139,14 +122,10 @@ const AppContent: React.FC = () => {
       return false;
     }
   });
-
-  // Offer Management States
   const [isOfferManagementModalOpen, setIsOfferManagementModalOpen] = useState(false);
   const [isOfferFormModalOpen, setIsOfferFormModalOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
 
-
-  // Effect to apply/remove 'dark' class to html element and persist dark mode preference
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -160,7 +139,6 @@ const AppContent: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  // Effect to persist admin login state
   useEffect(() => {
     try {
       localStorage.setItem('isAdminLoggedIn', JSON.stringify(isAdminLoggedIn));
@@ -169,32 +147,28 @@ const AppContent: React.FC = () => {
     }
   }, [isAdminLoggedIn]);
 
-  // Effect to handle products loading/error from Firebase
+  const addToast = useCallback((messageKey: string, type: 'success' | 'error' | 'info' = 'success', args?: Record<string, string | number>) => {
+    const id = Date.now().toString();
+    setToasts((prevToasts) => [...prevToasts, { id, message: t(messageKey, args), type }]);
+  }, [t]);
+  
   useEffect(() => {
     if (productsError) {
       addToast('Error loading products: ' + productsError, 'error');
     }
-  }, [productsError]);
+  }, [productsError, addToast]);
 
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = useCallback(() => {
     setIsDarkMode(prevMode => !prevMode);
-  };
+  }, []);
 
-
-  const addToast = (messageKey: string, type: 'success' | 'error' | 'info' = 'success', args?: Record<string, string | number>) => {
-    const id = Date.now().toString(); // Simple unique ID
-    setToasts((prevToasts) => [...prevToasts, { id, message: t(messageKey, args), type }]);
-  };
-
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
-  };
+  }, []);
 
-  // Effect to check for low stock products and display toasts
   useEffect(() => {
-    const currentLowStockIds = new Set<string>(); // Changed to string
-
+    const currentLowStockIds = new Set<string>();
     products.forEach(product => {
       const unitsRemaining = product.initialUnitsStock - product.unitsSold;
       if (unitsRemaining <= LOW_STOCK_THRESHOLD) {
@@ -212,72 +186,50 @@ const AppContent: React.FC = () => {
         }
       }
     });
-
-    // Remove product IDs from the alerted set if their stock has recovered
     alertedLowStockProductIds.current.forEach(id => {
       if (!currentLowStockIds.has(id)) {
         alertedLowStockProductIds.current.delete(id);
       }
     });
-  }, [products, locale, t]); // Depend on products, locale, and t for re-evaluation
+  }, [products, locale, addToast]);
 
-
-  const handleShowSettings = () => { // Renamed from handleShowLogin
-    setIsSettingsModalOpen(true);
-  };
-
-  const handleCloseSettings = () => { // New handler for SettingsModal
+  const handleShowSettings = useCallback(() => setIsSettingsModalOpen(true), []);
+  const handleCloseSettings = useCallback(() => setIsSettingsModalOpen(false), []);
+  const handleAdminLoginSuccess = useCallback(() => {
+    setIsAdminLoggedIn(true);
+    setCurrentScreen(Screen.Admin);
     setIsSettingsModalOpen(false);
-  };
-
-  const handleAdminLoginSuccess = () => { // Renamed to clearly indicate success
-    setIsAdminLoggedIn(true); // Set admin logged in state
+  }, []);
+  const handleGoToAdminPanel = useCallback(() => {
     setCurrentScreen(Screen.Admin);
-    setIsSettingsModalOpen(false); // Close main settings modal after successful login
-  };
-
-  const handleGoToAdminPanel = () => { // New handler for direct admin panel access when already logged in
-    setCurrentScreen(Screen.Admin);
-    setIsSettingsModalOpen(false); // Close settings modal
-  };
-
-  const handleAdminLoginError = () => {
+    setIsSettingsModalOpen(false);
+  }, []);
+  const handleAdminLoginError = useCallback(() => {
     addToast('incorrectPasswordAlert', 'error');
-  };
-
-  const handleAdminLogout = () => {
-    setIsAdminLoggedIn(false); // Clear admin logged in state
-    setCurrentScreen(Screen.Home); // Redirects to home page, effectively logging out of admin
-    addToast('loggedOutSuccess', 'info');
-  };
-
-  const handleGoHome = () => {
+  }, [addToast]);
+  const handleAdminLogout = useCallback(() => {
+    setIsAdminLoggedIn(false);
     setCurrentScreen(Screen.Home);
-  };
-
-  const handleGoToAdmin = () => { // New handler to go to admin from Customers or other admin sub-screens
-    setCurrentScreen(Screen.Admin);
-  };
-
-  const handleAddProduct = () => {
+    addToast('loggedOutSuccess', 'info');
+  }, [addToast]);
+  const handleGoHome = useCallback(() => setCurrentScreen(Screen.Home), []);
+  const handleGoToAdmin = useCallback(() => setCurrentScreen(Screen.Admin), []);
+  const handleAddProduct = useCallback(() => {
     setEditingProduct(null);
     setIsProductFormModalOpen(true);
-  };
-
-  const handleEditProduct = (id: string) => { // Changed id to string
+  }, []);
+  const handleEditProduct = useCallback((id: string) => {
     const productToEdit = products.find(p => p.id === id);
     if (productToEdit) {
       setEditingProduct(productToEdit);
       setIsProductFormModalOpen(true);
     }
-  };
-
-  const handleDeleteProduct = async (id: string) => { // Changed id to string
+  }, [products]);
+  const handleDeleteProduct = useCallback(async (id: string) => {
     if (window.confirm(t('confirmDeleteProduct'))) {
       try {
         const success = await deleteProduct(id);
         if (success) {
-          // First, check if the product has an active offer. If so, delete the offer too.
           const associatedOffer = offers.find(offer => offer.targetProductId === id);
           if (associatedOffer) {
             setOffers(prevOffers => prevOffers.filter(offer => offer.id !== associatedOffer.id));
@@ -290,42 +242,42 @@ const AppContent: React.FC = () => {
         addToast('Error deleting product: ' + e, 'error');
       }
     }
-  };
-
-  const handleSaveProduct = async (product: Omit<Product, 'createdAt'> & { id?: string }) => { // product might not have an ID yet, omit createdAt here
+  }, [t, deleteProduct, offers, addToast]);
+  const handleSaveProduct = useCallback(async (product: Omit<Product, 'createdAt'> & { id?: string }) => {
     try {
-      if (product.id) { // Editing existing product
-        await updateProduct(product.id, product); // Assuming updateProduct handles Partial<Product> or full Product
+      if (product.id) {
+        await updateProduct(product.id, product);
         addToast('productUpdatedSuccess', 'success');
-      } else { // Adding new product
-        await addProduct({ ...product, createdAt: serverTimestamp() }); // Firebase will generate ID and set createdAt
+      } else {
+        // For new products, Firestore generates an ID, so we must not include our `undefined` id field.
+        // We also need to remove any other fields that are undefined, as Firestore doesn't allow them.
+        const { id, ...newProductData } = product;
+
+        Object.keys(newProductData).forEach(key => {
+          if ((newProductData as any)[key] === undefined) {
+            delete (newProductData as any)[key];
+          }
+        });
+
+        await addProduct({ ...newProductData, createdAt: serverTimestamp() });
         addToast('productAddedSuccess', 'success');
       }
       setIsProductFormModalOpen(false);
     } catch (e) {
+      console.error("Error saving product:", e);
       addToast('Error saving product: ' + e, 'error');
     }
-  };
-
-  const handleShowCart = () => {
-    setIsCartModalOpen(true);
-  };
-
-  const handleCloseCart = () => {
-    setIsCartModalOpen(false);
-  };
-
-  const handleAddToCart = (product: Product) => {
-    // Check if there's enough stock
+  }, [updateProduct, addProduct, addToast]);
+  const handleShowCart = useCallback(() => setIsCartModalOpen(true), []);
+  const handleCloseCart = useCallback(() => setIsCartModalOpen(false), []);
+  const handleAddToCart = useCallback((product: Product) => {
     const availableUnits = product.initialUnitsStock - product.unitsSold;
     const itemInCart = cart.find(item => item.product.id === product.id);
     const currentCartQuantity = itemInCart ? itemInCart.quantity : 0;
-
     if (currentCartQuantity >= availableUnits) {
       addToast('notEnoughStock', 'error', { productName: product.name[locale] || product.name.es, availableUnits });
       return;
     }
-
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.product.id === product.id);
       if (existingItem) {
@@ -339,19 +291,15 @@ const AppContent: React.FC = () => {
       }
     });
     addToast('addedToCartSuccess', 'success', { productName: product.name[locale] || product.name.es });
-  };
-
-  const handleUpdateCartItemQuantity = (productId: string, newQuantity: number) => { // Changed productId to string
+  }, [cart, addToast, locale]);
+  const handleUpdateCartItemQuantity = useCallback((productId: string, newQuantity: number) => {
     setCart(prevCart => {
-      // Check stock before updating quantity
       const productInStock = products.find(p => p.id === productId);
       const availableUnits = productInStock ? (productInStock.initialUnitsStock - productInStock.unitsSold) : 0;
-
       if (newQuantity > availableUnits) {
         addToast('notEnoughStockShort', 'error', { availableUnits });
-        return prevCart; // Prevent updating if not enough stock
+        return prevCart;
       }
-
       if (newQuantity <= 0) {
         return prevCart.filter(item => item.product.id !== productId);
       }
@@ -361,158 +309,117 @@ const AppContent: React.FC = () => {
           : item
       );
     });
-  };
-
-  const handleRemoveFromCart = (productId: string) => { // Changed productId to string
+  }, [products, addToast]);
+  const handleRemoveFromCart = useCallback((productId: string) => {
     setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
     addToast('removedFromCartSuccess', 'success');
-  };
-
-  const handlePurchase = async (customerDetails: CustomerOrderDetails, paymentMethod: 'COD' | 'Online' | 'Nequi', sendWhatsApp: boolean, sendEmail: boolean) => {
+  }, [addToast]);
+  const handlePurchase = useCallback(async (customerDetails: CustomerOrderDetails, paymentMethod: 'COD' | 'Online' | 'Nequi', sendWhatsApp: boolean, sendEmail: boolean) => {
     if (cart.length === 0) {
       addToast('cartEmptyError', 'error');
       return;
     }
-
-    // Calculate total with offers applied
     const total = cart.reduce((sum, item) => {
       const offer = item.product.activeOfferId ? offers.find(o => o.id === item.product.activeOfferId && o.isActive) : undefined;
       let effectivePrice = item.product.sale;
       let effectiveQuantity = item.quantity;
-
       if (offer) {
         if (offer.type === OfferType.PercentageDiscount) {
           effectivePrice = item.product.sale * (1 - offer.value! / 100);
         } else if (offer.type === OfferType.FixedDiscount) {
-          effectivePrice = Math.max(0, item.product.sale - offer.value!); // Price won't go below 0
+          effectivePrice = Math.max(0, item.product.sale - offer.value!);
         } else if (offer.type === OfferType.BuyXGetYFree) {
-          const buyX = offer.buyQuantity || 0; // Default to 0 to prevent division by zero
+          const buyX = offer.buyQuantity || 0;
           const getY = offer.getFreeQuantity || 0;
-
           if (buyX > 0 && getY >= 0) {
-            // Calculate paid quantity: total quantity - (number of bundles * free items per bundle)
-            // Example: Buy 2 Get 1 Free (X=2, Y=1). Bundle size = X+Y = 3. Customer pays for X=2 items per bundle.
-            // If item.quantity = 3, floor(3/3) = 1 bundle. 1*Y=1 free. Effective quantity = 3-1 = 2.
-            // If item.quantity = 5, floor(5/3) = 1 bundle. 1*Y=1 free. Effective quantity = 5-1 = 4.
-            // If item.quantity = 6, floor(6/3) = 2 bundles. 2*Y=2 free. Effective quantity = 6-2 = 4.
             effectiveQuantity = item.quantity - (Math.floor(item.quantity / (buyX + getY)) * getY);
           }
         }
       }
       return sum + effectivePrice * effectiveQuantity;
     }, 0);
-
-
-    const expectedDelivery = t('deliveryTime'); // Static expected delivery for now
-
+    const expectedDelivery = t('deliveryTime');
     try {
-      // Update product stock (unitsSold) using updateProduct from the hook
-      // Remove the direct setProducts call and rely on the useProducts hook's updateProduct
-      // which will trigger the Firestore listener and update the products state.
       for (const cartItem of cart) {
         const product = products.find(p => p.id === cartItem.product.id);
         if (product) {
-          await updateProduct(product.id, { unitsSold: product.unitsSold + cartItem.quantity }); // Update stock in Firestore
+          await updateProduct(product.id, { unitsSold: product.unitsSold + cartItem.quantity });
         }
       }
-
-      // Create new order
-      const orderId = Date.now().toString(); // Generate unique ID for order
+      const orderId = Date.now().toString();
       const newOrder: Order = {
         id: orderId,
-        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        date: new Date().toISOString().split('T')[0],
         items: [...cart],
         totalAmount: total,
         paymentMethod: paymentMethod,
         expectedDelivery: expectedDelivery,
       };
-
-      // Find existing customer or create new one
       setCustomers(prevCustomers => {
         let existingCustomer = prevCustomers.find(
           cust => cust.email === customerDetails.email || cust.phone === customerDetails.phone
         );
-
         if (existingCustomer) {
-          // Update existing customer
           return prevCustomers.map(cust =>
             cust.id === existingCustomer?.id
               ? {
                   ...cust,
                   totalPurchases: cust.totalPurchases + total,
                   orders: [...cust.orders, newOrder],
-                  status: 'returning', // Set status to returning
+                  status: 'returning',
                 }
               : cust
           );
         } else {
-          // Create new customer
           const newCustomer: Customer = {
-            id: Date.now(), // Simple unique ID for customer
+            id: Date.now(),
             name: customerDetails.name,
             email: customerDetails.email,
             phone: customerDetails.phone,
             address: customerDetails.address,
             totalPurchases: total,
             orders: [newOrder],
-            status: 'new', // Set status to new
+            status: 'new',
           };
           return [...prevCustomers, newCustomer];
         }
       });
-
-      // Generate tracking link and QR code image URL for the OrderConfirmationModal
-      const orderTrackingLink = `https://your-store.com/track-order?id=${orderId}`; // Placeholder tracking URL
+      const orderTrackingLink = `https://your-store.com/track-order?id=${orderId}`;
       const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(orderTrackingLink)}`;
-
-      // Prepare details for the OrderConfirmationModal
       const paymentMethodDisplay =
         paymentMethod === 'COD' ? t('codOptionLabel') :
         paymentMethod === 'Online' ? t('onlineOptionLabel') :
         t('nequiPaymentLabel');
-
       const orderConfirmationDetails: OrderConfirmationDetails = {
         orderId: orderId,
         customerName: customerDetails.name,
         customerPhone: customerDetails.phone,
         customerEmail: customerDetails.email,
         customerAddress: customerDetails.address,
-        orderItems: [...cart], // Pass full cart items
+        orderItems: [...cart],
         totalAmount: total,
         paymentMethod: paymentMethodDisplay,
         expectedDelivery: expectedDelivery,
         orderTrackingLink: orderTrackingLink,
         qrCodeImageUrl: qrCodeImageUrl,
       };
-
       setLastOrderDetails(orderConfirmationDetails);
-      setIsOrderConfirmationModalOpen(true); // Open the new confirmation modal
-
-      addToast('purchaseSuccessShort', 'success'); // Show a short toast for immediate feedback
-
-      if (sendWhatsApp) {
-        addToast('invoiceSentWhatsApp', 'info');
-        // Here you would typically integrate with a WhatsApp API or generate a link
-      }
-      if (sendEmail) {
-        addToast('invoiceSentEmail', 'info');
-        // Here you would typically integrate with an email service
-      }
-
-      setCart([]); // Clear the cart
-      setIsCartModalOpen(false); // Close the cart modal
+      setIsOrderConfirmationModalOpen(true);
+      addToast('purchaseSuccessShort', 'success');
+      if (sendWhatsApp) addToast('invoiceSentWhatsApp', 'info');
+      if (sendEmail) addToast('invoiceSentEmail', 'info');
+      setCart([]);
+      setIsCartModalOpen(false);
     } catch (error) {
       console.error("Error during purchase:", error);
       addToast('purchaseErrorMessage', 'error');
     }
-  };
-
-  const handleCloseOrderConfirmationModal = () => {
+  }, [cart, t, offers, products, updateProduct, addToast]);
+  const handleCloseOrderConfirmationModal = useCallback(() => {
     setIsOrderConfirmationModalOpen(false);
     setLastOrderDetails(null);
-  };
-
-  const handleShareOrder = async (details: OrderConfirmationDetails) => {
+  }, []);
+  const handleShareOrder = useCallback(async (details: OrderConfirmationDetails) => {
     const shareText = t('shareOrderText', {
       orderId: details.orderId,
       customerName: details.customerName,
@@ -525,95 +432,61 @@ const AppContent: React.FC = () => {
       orderTrackingLink: details.orderTrackingLink,
     });
     const shareSubject = t('shareOrderSubject');
-
     if (navigator.share) {
       try {
         await navigator.share({
           title: shareSubject,
           text: shareText,
-          url: details.orderTrackingLink, // Can also share the tracking link
+          url: details.orderTrackingLink,
         });
       } catch (error) {
         console.error('Error sharing:', error);
-        // Fallback for desktop or if user cancels share
         alert(`${shareSubject}\n\n${shareText}`);
       }
     } else {
-      // Fallback for browsers that do not support Web Share API
       alert(`${shareSubject}\n\n${shareText}`);
     }
-  };
-
-
+  }, [t]);
   const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
-
-  // Functions for payment activation
-  const handleShowPaymentActivation = () => {
-    setIsPaymentActivationModalOpen(true);
-  };
-
-  const handleClosePaymentActivation = () => {
-    setIsPaymentActivationModalOpen(false);
-  };
-
-  const handleSavePaymentSettings = (cod: boolean, online: boolean, nequi: boolean) => {
+  const handleShowPaymentActivation = useCallback(() => setIsPaymentActivationModalOpen(true), []);
+  const handleClosePaymentActivation = useCallback(() => setIsPaymentActivationModalOpen(false), []);
+  const handleSavePaymentSettings = useCallback((cod: boolean, online: boolean, nequi: boolean) => {
     setIsCODEnabled(cod);
     setIsOnlinePaymentEnabled(online);
-    setIsNequiEnabled(nequi); // Save Nequi state
+    setIsNequiEnabled(nequi);
     addToast('paymentSettingsSaved', 'success');
     setIsPaymentActivationModalOpen(false);
-  };
-
-  // Functions for Customers List
-  const handleShowCustomers = () => {
-    setCurrentScreen(Screen.Customers);
-  };
-
-  // Functions for Customer Orders Modal
-  const handleViewCustomerOrders = (customer: Customer) => {
+  }, [addToast]);
+  const handleShowCustomers = useCallback(() => setCurrentScreen(Screen.Customers), []);
+  const handleViewCustomerOrders = useCallback((customer: Customer) => {
     setSelectedCustomerForOrders(customer);
     setIsCustomerOrdersModalOpen(true);
-  };
-
-  const handleCloseCustomerOrdersModal = () => {
+  }, []);
+  const handleCloseCustomerOrdersModal = useCallback(() => {
     setIsCustomerOrdersModalOpen(false);
     setSelectedCustomerForOrders(null);
-  };
-
-  // Offer Management Handlers
-  const handleShowOfferManagement = () => {
-    setIsOfferManagementModalOpen(true);
-  };
-
-  const handleCloseOfferManagement = () => {
-    setIsOfferManagementModalOpen(false);
-  };
-
-  const handleAddOffer = () => {
+  }, []);
+  const handleShowOfferManagement = useCallback(() => setIsOfferManagementModalOpen(true), []);
+  const handleCloseOfferManagement = useCallback(() => setIsOfferManagementModalOpen(false), []);
+  const handleAddOffer = useCallback(() => {
     setEditingOffer(null);
     setIsOfferFormModalOpen(true);
-  };
-
-  const handleEditOffer = (offerId: string) => {
+  }, []);
+  const handleEditOffer = useCallback((offerId: string) => {
     const offerToEdit = offers.find(o => o.id === offerId);
     if (offerToEdit) {
       setEditingOffer(offerToEdit);
       setIsOfferFormModalOpen(true);
     }
-  };
-
-  const handleSaveOffer = (offer: Offer) => {
-    // Check if the target product already has an active offer (unless it's the current offer being edited)
+  }, [offers]);
+  const handleSaveOffer = useCallback((offer: Offer) => {
     const existingOfferForProduct = offers.find(
       o => o.targetProductId === offer.targetProductId && o.id !== offer.id && o.isActive
     );
-
     if (offer.isActive && existingOfferForProduct) {
       addToast('productAlreadyHasOffer', 'error', { productName: products.find(p => p.id === offer.targetProductId)?.name[locale] || '' });
       return;
     }
-
-
     setOffers(prevOffers => {
       let updatedOffers;
       if (editingOffer) {
@@ -623,11 +496,6 @@ const AppContent: React.FC = () => {
         updatedOffers = [...prevOffers, offer];
         addToast('offerAddedSuccess', 'success');
       }
-
-      // Update products to link/unlink the offer
-      // This part now directly interacts with the products state managed by useProducts
-      // We will create a temporary array for products to reflect the change visually
-      // and then update the specific product in Firestore.
       products.forEach(p => {
         if (p.id === offer.targetProductId) {
           if (offer.isActive && p.activeOfferId !== offer.id) {
@@ -642,12 +510,10 @@ const AppContent: React.FC = () => {
       return updatedOffers;
     });
     setIsOfferFormModalOpen(false);
-  };
-
-  const handleDeleteOffer = (offerId: string) => {
+  }, [editingOffer, addToast, offers, locale, products, updateProduct]);
+  const handleDeleteOffer = useCallback((offerId: string) => {
     if (window.confirm(t('confirmDeleteOffer'))) {
       setOffers(prevOffers => prevOffers.filter(o => o.id !== offerId));
-      // Unlink offer from product in Firestore
       products.forEach(p => {
         if (p.activeOfferId === offerId) {
           updateProduct(p.id, { activeOfferId: undefined });
@@ -655,15 +521,12 @@ const AppContent: React.FC = () => {
       });
       addToast('offerDeletedSuccess', 'success');
     }
-  };
-
-  const handleToggleOfferActive = (offerId: string) => {
+  }, [t, products, updateProduct, addToast]);
+  const handleToggleOfferActive = useCallback((offerId: string) => {
     setOffers(prevOffers =>
       prevOffers.map(o => {
         if (o.id === offerId) {
           const newActiveState = !o.isActive;
-
-          // If activating, check for conflicts
           if (newActiveState) {
             const productWithExistingOffer = products.find(
               p => p.id === o.targetProductId && p.activeOfferId && p.activeOfferId !== o.id
@@ -672,11 +535,9 @@ const AppContent: React.FC = () => {
               addToast('productAlreadyHasOtherActiveOffer', 'error', {
                 productName: productWithExistingOffer.name[locale] || '',
               });
-              return o; // Do not activate this offer
+              return o;
             }
           }
-
-          // Update product link in Firestore based on new offer state
           products.forEach(p => {
             if (p.id === o.targetProductId) {
               updateProduct(p.id, { activeOfferId: newActiveState ? o.id : undefined });
@@ -689,14 +550,16 @@ const AppContent: React.FC = () => {
         return o;
       })
     );
-  };
+  }, [addToast, locale, products, updateProduct]);
+
+  const loadingFallback = (
+    <div className="flex items-center justify-center min-h-screen text-xl font-bold dark:bg-gray-900 dark:text-white">
+      {t('loading')}...
+    </div>
+  );
 
   if (productsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-xl font-bold dark:bg-gray-900 dark:text-white">
-        {t('loading')}...
-      </div>
-    );
+    return loadingFallback;
   }
 
   return (
@@ -704,114 +567,124 @@ const AppContent: React.FC = () => {
       {currentScreen === Screen.Home && (
         <Home
           products={products}
-          onShowSettings={handleShowSettings} // Pass new handler
+          onShowSettings={handleShowSettings}
           onShowCart={handleShowCart}
           onAddToCart={handleAddToCart}
           cartItemCount={cartItemCount}
-          offers={offers} // Pass offers to Home
+          offers={offers}
         />
       )}
-      {currentScreen === Screen.Admin && (
-        <Admin
-          products={products}
-          onGoHome={handleGoHome} // Still goes home, but from admin
-          onAddProduct={handleAddProduct}
-          onEditProduct={handleEditProduct}
-          onDeleteProduct={handleDeleteProduct}
-          onShowPaymentActivation={handleShowPaymentActivation}
-          onShowCustomers={handleShowCustomers} // Pass new handler
-          onShowOfferManagement={handleShowOfferManagement} // New: pass handler for offer management
-          onAdminLogout={handleAdminLogout} // Pass new logout handler
-        />
-      )}
-      {currentScreen === Screen.Customers && ( // New Customers screen
-        <Customers
-          customers={customers}
-          onGoHome={handleGoToAdmin} // Back button from customers goes to admin
-          onViewOrders={handleViewCustomerOrders} // Pass new handler
-        />
-      )}
+      <Suspense fallback={loadingFallback}>
+        {currentScreen === Screen.Admin && (
+          <Admin
+            products={products}
+            onGoHome={handleGoHome}
+            onAddProduct={handleAddProduct}
+            onEditProduct={handleEditProduct}
+            onDeleteProduct={handleDeleteProduct}
+            onShowPaymentActivation={handleShowPaymentActivation}
+            onShowCustomers={handleShowCustomers}
+            onShowOfferManagement={handleShowOfferManagement}
+            onAdminLogout={handleAdminLogout}
+          />
+        )}
+        {currentScreen === Screen.Customers && (
+          <Customers
+            customers={customers}
+            onGoHome={handleGoToAdmin}
+            onViewOrders={handleViewCustomerOrders}
+          />
+        )}
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={handleCloseSettings}
-        onAdminLoginSuccess={handleAdminLoginSuccess} // Use new success handler
-        onGoToAdminPanel={handleGoToAdminPanel} // Pass handler for direct admin panel access
-        isAdminLoggedIn={isAdminLoggedIn} // Pass admin login state
-        isDarkMode={isDarkMode} // Pass dark mode state
-        onToggleDarkMode={toggleDarkMode} // Pass dark mode toggle function
-        onLoginError={handleAdminLoginError} // Prop to pass the error handler
-      />
+        {isSettingsModalOpen && (
+          <SettingsModal
+            isOpen={isSettingsModalOpen}
+            onClose={handleCloseSettings}
+            onAdminLoginSuccess={handleAdminLoginSuccess}
+            onGoToAdminPanel={handleGoToAdminPanel}
+            isAdminLoggedIn={isAdminLoggedIn}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={toggleDarkMode}
+            onLoginError={handleAdminLoginError}
+          />
+        )}
 
-      <ProductFormModal
-        isOpen={isProductFormModalOpen}
-        onClose={() => setIsProductFormModalOpen(false)}
-        onSave={handleSaveProduct}
-        editingProduct={editingProduct}
-      />
+        {isProductFormModalOpen && (
+          <ProductFormModal
+            isOpen={isProductFormModalOpen}
+            onClose={() => setIsProductFormModalOpen(false)}
+            onSave={handleSaveProduct}
+            editingProduct={editingProduct}
+          />
+        )}
+        
+        {isPaymentActivationModalOpen && (
+          <PaymentActivationModal
+            isOpen={isPaymentActivationModalOpen}
+            onClose={handleClosePaymentActivation}
+            currentCODState={isCODEnabled}
+            currentOnlineState={isOnlinePaymentEnabled}
+            currentNequiState={isNequiEnabled}
+            onSavePaymentSettings={handleSavePaymentSettings}
+          />
+        )}
 
-      <PaymentActivationModal
-        isOpen={isPaymentActivationModalOpen}
-        onClose={handleClosePaymentActivation}
-        currentCODState={isCODEnabled}
-        currentOnlineState={isOnlinePaymentEnabled}
-        currentNequiState={isNequiEnabled} // Pass Nequi state
-        onSavePaymentSettings={handleSavePaymentSettings}
-      />
-
-      <CartModal
-        isOpen={isCartModalOpen}
-        onClose={handleCloseCart}
-        cartItems={cart}
-        onUpdateQuantity={handleUpdateCartItemQuantity}
-        onRemoveItem={handleRemoveFromCart}
-        onPurchase={handlePurchase}
-        isCODEnabled={isCODEnabled} // Pass payment enablement state
-        isOnlinePaymentEnabled={isOnlinePaymentEnabled} // Pass payment enablement state
-        isNequiEnabled={isNequiEnabled} // Pass Nequi enablement state
-        offers={offers} // Pass offers to CartModal
-      />
-
-      {/* Customer Orders Modal */}
-      {selectedCustomerForOrders && (
-        <CustomerOrdersModal
-          isOpen={isCustomerOrdersModalOpen}
-          onClose={handleCloseCustomerOrdersModal}
-          customer={selectedCustomerForOrders}
-        />
-      )}
-
-      {/* Order Confirmation Modal (New) */}
-      {isOrderConfirmationModalOpen && lastOrderDetails && (
-        <OrderConfirmationModal
-          isOpen={isOrderConfirmationModalOpen}
-          onClose={handleCloseOrderConfirmationModal}
-          orderDetails={lastOrderDetails}
-          onShareOrder={handleShareOrder}
-        />
-      )}
-
-      {/* Offer Management Modals */}
-      <OfferManagementModal
-        isOpen={isOfferManagementModalOpen}
-        onClose={handleCloseOfferManagement}
-        offers={offers}
-        products={products}
-        onAddOffer={handleAddOffer}
-        onEditOffer={handleEditOffer}
-        onDeleteOffer={handleDeleteOffer}
-        onToggleOfferActive={handleToggleOfferActive}
-      />
-
-      <OfferFormModal
-        isOpen={isOfferFormModalOpen}
-        onClose={() => setIsOfferFormModalOpen(false)}
-        onSave={handleSaveOffer}
-        editingOffer={editingOffer}
-        products={products}
-        offers={offers} // Pass offers to check for conflicts
-      />
+        {isCartModalOpen && (
+          <CartModal
+            isOpen={isCartModalOpen}
+            onClose={handleCloseCart}
+            cartItems={cart}
+            onUpdateQuantity={handleUpdateCartItemQuantity}
+            onRemoveItem={handleRemoveFromCart}
+            onPurchase={handlePurchase}
+            isCODEnabled={isCODEnabled}
+            isOnlinePaymentEnabled={isOnlinePaymentEnabled}
+            isNequiEnabled={isNequiEnabled}
+            offers={offers}
+          />
+        )}
+        
+        {selectedCustomerForOrders && isCustomerOrdersModalOpen && (
+          <CustomerOrdersModal
+            isOpen={isCustomerOrdersModalOpen}
+            onClose={handleCloseCustomerOrdersModal}
+            customer={selectedCustomerForOrders}
+          />
+        )}
+        
+        {isOrderConfirmationModalOpen && lastOrderDetails && (
+          <OrderConfirmationModal
+            isOpen={isOrderConfirmationModalOpen}
+            onClose={handleCloseOrderConfirmationModal}
+            orderDetails={lastOrderDetails}
+            onShareOrder={handleShareOrder}
+          />
+        )}
+        
+        {isOfferManagementModalOpen && (
+          <OfferManagementModal
+            isOpen={isOfferManagementModalOpen}
+            onClose={handleCloseOfferManagement}
+            offers={offers}
+            products={products}
+            onAddOffer={handleAddOffer}
+            onEditOffer={handleEditOffer}
+            onDeleteOffer={handleDeleteOffer}
+            onToggleOfferActive={handleToggleOfferActive}
+          />
+        )}
+        
+        {isOfferFormModalOpen && (
+          <OfferFormModal
+            isOpen={isOfferFormModalOpen}
+            onClose={() => setIsOfferFormModalOpen(false)}
+            onSave={handleSaveOffer}
+            editingOffer={editingOffer}
+            products={products}
+            offers={offers}
+          />
+        )}
+      </Suspense>
 
       <Toast messages={toasts} onRemoveToast={removeToast} />
     </div>

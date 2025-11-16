@@ -117,4 +117,4 @@ const Admin: React.FC<AdminProps> = ({
   );
 };
 
-export default Admin;
+export default React.memo(Admin);
