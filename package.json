@@ -1,5 +1,4 @@
 {
-{
   "name": "pollo-halal",
   "version": "1.0.0",
   "private": true,
@@ -17,3 +16,4 @@
     "node": "18.x"
   }
 }
+
