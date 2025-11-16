@@ -1,26 +1,23 @@
 {
-  "name": "pollo-halal",
+  "name": "pollohalal-app-1",
   "version": "1.0.0",
-  "private": true,
-
-  "engines": {
-    "node": "18.x"
-  },
-
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-
+  "description": "A React web application for managing and displaying Pollo Halal chicken products with admin functionalities.",
+  "main": "index.tsx",
   "dependencies": {
-    "firebase": "^10.7.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@google/genai": "0.11.0",
+    "react": "^19.0.0-rc-f994737d14-20240522",
+    "react-dom": "^19.0.0-rc-f994737d14-20240522",
+    "firebase": "^10.7.1"
   },
-
   "devDependencies": {
-    "vite": "^4.5.0",
-    "@vitejs/plugin-react": "^4.1.0"
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "typescript": "^5.2.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   }
 }

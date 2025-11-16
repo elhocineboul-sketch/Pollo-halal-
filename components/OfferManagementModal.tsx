@@ -29,7 +29,7 @@ const OfferManagementModal: React.FC<OfferManagementModalProps> = ({
   const t = useTranslation();
   const { locale } = useLocale();
 
-  const getProductName = (productId: number) => {
+  const getProductName = (productId: string) => { // Changed productId to string
     const product = products.find(p => p.id === productId);
     return product ? (product.name[locale] || product.name.es || product.name.en || 'N/A') : 'N/A';
   };

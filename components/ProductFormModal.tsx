@@ -7,7 +7,7 @@ import { useTranslation, useLocale } from '../i18n/LocaleContext';
 export interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Product) => void;
+  onSave: (product: Omit<Product, 'createdAt'> & { id?: string }) => void; // Allow id to be optional for new products
   editingProduct?: Product | null;
 }
 
@@ -27,6 +27,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [unitWeightKg, setUnitWeightKg] = useState<number | null>(null);
   const [initialUnitsStock, setInitialUnitsStock] = useState<number | null>(null);
+  const [category, setCategory] = useState<string>(''); // New state for category
 
   const [profit, setProfit] = useState<number>(0);
   const [profitPercent, setProfitPercent] = useState<string>('0%');
@@ -41,6 +42,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setImagePreviewUrl(editingProduct.img);
       setUnitWeightKg(editingProduct.unitWeightKg);
       setInitialUnitsStock(editingProduct.initialUnitsStock);
+      setCategory(editingProduct.category || ''); // Load category
     } else {
       setName('');
       setDesc('');
@@ -49,6 +51,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setImagePreviewUrl(null);
       setUnitWeightKg(null);
       setInitialUnitsStock(null);
+      setCategory(''); // Clear category for new product
     }
   }, [editingProduct, isOpen, locale]); // Re-run effect when locale changes
 
@@ -90,7 +93,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     const finalUnitWeightKg = unitWeightKg ?? 0;
     const finalInitialUnitsStock = initialUnitsStock ?? 0;
 
-    if (!name || !desc || finalWholesale <= 0 || finalSale <= 0 || finalUnitWeightKg <= 0 || finalInitialUnitsStock <= 0) {
+    if (!name.trim() || !desc.trim() || finalWholesale <= 0 || finalSale <= 0 || finalUnitWeightKg <= 0 || finalInitialUnitsStock <= 0) {
       alert(t('fillAllFieldsError'));
       return;
     }
@@ -112,8 +115,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       descTranslations = { es: desc, en: desc, ar: desc }; // Cast 'desc' to Locale,string
     }
 
-    const newProduct: Product = {
-      id: editingProduct ? editingProduct.id : Date.now(),
+    const productToSave: Omit<Product, 'createdAt'> & { id?: string } = {
+      id: editingProduct ? editingProduct.id : undefined, // Firebase will assign ID for new products
       name: nameTranslations,
       desc: descTranslations,
       wholesale: finalWholesale,
@@ -122,9 +125,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       unitWeightKg: finalUnitWeightKg,
       initialUnitsStock: finalInitialUnitsStock,
       unitsSold: editingProduct ? editingProduct.unitsSold : 0,
-      activeOfferId: editingProduct ? editingProduct.activeOfferId : undefined, // Keep existing offer ID or set to undefined for new products
+      activeOfferId: editingProduct ? editingProduct.activeOfferId : undefined,
+      category: category.trim() === '' ? undefined : category.trim(), // Save category, or undefined if empty
     };
-    onSave(newProduct);
+    onSave(productToSave);
     onClose();
   };
 
@@ -169,6 +173,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
         placeholder={t('productDescriptionPlaceholder')}
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
+      />
+      <input
+        type="text"
+        id="pCategory"
+        className="w-full p-3 rounded-xl border-none bg-gray-100 mb-3 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+        placeholder={t('productCategoryPlaceholder')} // New translation key
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
       />
       <input
         type="number"

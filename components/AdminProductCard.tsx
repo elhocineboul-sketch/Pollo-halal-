@@ -5,8 +5,8 @@ import { useTranslation, useLocale } from '../i18n/LocaleContext';
 
 export interface AdminProductCardProps {
   product: Product;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onEdit: (id: string) => void; // Changed id to string
+  onDelete: (id: string) => void; // Changed id to string
 }
 
 const AdminProductCard: React.FC<AdminProductCardProps> = ({ product, onEdit, onDelete }) => {
@@ -27,6 +27,7 @@ const AdminProductCard: React.FC<AdminProductCardProps> = ({ product, onEdit, on
         <div className="flex-1">
           <div className="font-bold text-lg mb-1">{productName}</div>
           <div className="text-gray-600 text-sm dark:text-gray-400">{productDesc}</div>
+          {product.category && <div className="text-gray-500 text-xs dark:text-gray-400">{product.category}</div>} {/* Display category */}
         </div>
       </div>
       <div className="bg-gray-100 p-4 rounded-xl mb-4 dark:bg-gray-700">

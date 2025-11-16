@@ -8,8 +8,8 @@ export interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: number, newQuantity: number) => void;
-  onRemoveItem: (productId: number) => void;
+  onUpdateQuantity: (productId: string, newQuantity: number) => void; // Changed productId to string
+  onRemoveItem: (productId: string) => void; // Changed productId to string
   onPurchase: (customerDetails: CustomerOrderDetails, paymentMethod: 'COD' | 'Online' | 'Nequi', sendWhatsApp: boolean, sendEmail: boolean) => void; // Updated signature
   isCODEnabled: boolean; // New prop
   isOnlinePaymentEnabled: boolean; // New prop

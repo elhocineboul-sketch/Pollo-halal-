@@ -38,6 +38,7 @@ export const translations = {
     chooseImageLabel: '📷 Elegir imagen del producto',
     productNamePlaceholder: 'Nombre del producto',
     productDescriptionPlaceholder: 'Descripción del producto',
+    productCategoryPlaceholder: 'Categoría (Opcional)', // New
     wholesalePricePlaceholder: 'Precio al por mayor ($)',
     salePricePlaceholder: 'Precio de venta ($)',
     unitWeightKgPlaceholder: 'Peso unitario en kg (ej: 0.5)',
@@ -53,6 +54,8 @@ export const translations = {
     activatePaymentButton: '💳 Activar método de pago',
     inventoryManagementTitle: 'Gestión de inventario',
     productTableHeading: 'Producto',
+    categoryTableHeading: 'Categoría', // New
+    noCategory: 'Sin categoría', // New
     wholesaleUnitTableHeading: 'Venta al por mayor (unidad)',
     sale500gTableHeading: 'Venta 500g',
     kgPurchasedTableHeading: 'Kg comprados',
@@ -203,6 +206,7 @@ Rastrea tu pedido aquí: {orderTrackingLink}
     logoutButton: 'Cerrar sesión', // New translation
     loggedOutSuccess: '✓ Sesión cerrada con éxito.',
     goToAdminPanelButton: '🚀 لوحة التحكم', // New: Go to Admin Panel
+    loading: 'Cargando', // New
   },
   en: {
     appName: 'Pollo Halal',
@@ -241,6 +245,7 @@ Rastrea tu pedido aquí: {orderTrackingLink}
     chooseImageLabel: '📷 Choose Product Image',
     productNamePlaceholder: 'Product Name',
     productDescriptionPlaceholder: 'Product Description',
+    productCategoryPlaceholder: 'Category (Optional)', // New
     wholesalePricePlaceholder: 'Wholesale Price ($)',
     salePricePlaceholder: 'Sale Price ($)',
     unitWeightKgPlaceholder: 'Unit Weight in Kg (e.g., 0.5)',
@@ -256,6 +261,8 @@ Rastrea tu pedido aquí: {orderTrackingLink}
     activatePaymentButton: '💳 Activate Payment Method',
     inventoryManagementTitle: 'Inventory Management',
     productTableHeading: 'Product',
+    categoryTableHeading: 'Category', // New
+    noCategory: 'No Category', // New
     wholesaleUnitTableHeading: 'Wholesale (Unit)',
     sale500gTableHeading: 'Sale 500g',
     kgPurchasedTableHeading: 'Kg Purchased',
@@ -406,6 +413,7 @@ Thank you for your purchase!`,
     logoutButton: 'Logout', // New translation
     loggedOutSuccess: '✓ Logged out successfully.',
     goToAdminPanelButton: '🚀 Admin Panel', // New: Go to Admin Panel
+    loading: 'Loading', // New
   },
   ar: {
     appName: 'Pollo Halal',
@@ -444,6 +452,7 @@ Thank you for your purchase!`,
     chooseImageLabel: '📷 اختر صورة المنتج',
     productNamePlaceholder: 'اسم المنتج',
     productDescriptionPlaceholder: 'وصف المنتج',
+    productCategoryPlaceholder: 'الفئة (اختياري)', // New
     wholesalePricePlaceholder: 'سعر الجملة ($)',
     salePricePlaceholder: 'سعر البيع ($)',
     unitWeightKgPlaceholder: 'وزن الوحدة بالكيلوجرام (مثال: 0.5)',
@@ -459,6 +468,8 @@ Thank you for your purchase!`,
     activatePaymentButton: '💳 تفعيل طريقة الدفع',
     inventoryManagementTitle: 'إدارة المخزون',
     productTableHeading: 'المنتج',
+    categoryTableHeading: 'الفئة', // New
+    noCategory: 'بلا فئة', // New
     wholesaleUnitTableHeading: 'جملة الوحدة',
     sale500gTableHeading: 'بيع 500g',
     kgPurchasedTableHeading: 'كجم مشتراة',
@@ -609,6 +620,7 @@ Thank you for your purchase!`,
     logoutButton: 'تسجيل خروج', // New translation
     loggedOutSuccess: '✓ تم تسجيل الخروج بنجاح.',
     goToAdminPanelButton: '🚀 لوحة التحكم', // New: Go to Admin Panel
+    loading: 'جار التحميل', // New
   },
 };
 

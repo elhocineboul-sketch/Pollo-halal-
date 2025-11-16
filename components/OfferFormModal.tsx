@@ -29,7 +29,7 @@ const OfferFormModal: React.FC<OfferFormModalProps> = ({
   const [offerValue, setOfferValue] = useState<number | null>(null); // For PercentageDiscount and FixedDiscount
   const [buyQuantity, setBuyQuantity] = useState<number | null>(null); // For BuyXGetYFree
   const [getFreeQuantity, setGetFreeQuantity] = useState<number | null>(null); // For BuyXGetYFree
-  const [targetProductId, setTargetProductId] = useState<number | null>(null);
+  const [targetProductId, setTargetProductId] = useState<string | null>(null); // Changed to string
   const [isActive, setIsActive] = useState<boolean>(true);
 
   useEffect(() => {
@@ -197,7 +197,7 @@ const OfferFormModal: React.FC<OfferFormModalProps> = ({
       <select
         className="w-full p-3 rounded-xl border-none bg-gray-100 mb-4 text-base text-end dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         value={targetProductId ?? ''}
-        onChange={(e) => setTargetProductId(e.target.value === '' ? null : parseInt(e.target.value))}
+        onChange={(e) => setTargetProductId(e.target.value === '' ? null : e.target.value)} // Value is string
       >
         <option value="">{t('selectTargetProduct')}</option>
         {availableProducts.map(product => (

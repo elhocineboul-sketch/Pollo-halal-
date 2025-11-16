@@ -8,8 +8,8 @@ export interface AdminProps {
   products: Product[];
   onGoHome: () => void;
   onAddProduct: () => void;
-  onEditProduct: (id: number) => void;
-  onDeleteProduct: (id: number) => void;
+  onEditProduct: (id: string) => void; // Changed id to string
+  onDeleteProduct: (id: string) => void; // Changed id to string
   onShowPaymentActivation: () => void;
   onShowCustomers: () => void; // New prop for showing customers list
   onShowOfferManagement: () => void; // New prop for showing offer management
@@ -79,6 +79,7 @@ const Admin: React.FC<AdminProps> = ({
           <thead>
             <tr className="bg-amber-100 text-amber-800 text-sm font-semibold dark:bg-amber-900 dark:text-amber-100">
               <th className="py-3 px-4 whitespace-nowrap">{t('productTableHeading')}</th>
+              <th className="py-3 px-4 whitespace-nowrap">{t('categoryTableHeading')}</th> {/* New category heading */}
               <th className="py-3 px-4 whitespace-nowrap">{t('wholesaleUnitTableHeading')}</th>
               <th className="py-3 px-4 whitespace-nowrap">{t('sale500gTableHeading')}</th>
               <th className="py-3 px-4 whitespace-nowrap">{t('kgPurchasedTableHeading')}</th>
@@ -99,6 +100,7 @@ const Admin: React.FC<AdminProps> = ({
               return (
                 <tr key={p.id} className={`${rowClass} border-b border-gray-100 last:border-b-0 text-gray-700 text-sm dark:border-gray-700 dark:text-gray-300`}>
                   <td className="py-3 px-4 font-medium whitespace-nowrap">{p.name[locale] || p.name.es || p.name.en || 'N/A'}</td>
+                  <td className="py-3 px-4 whitespace-nowrap">{p.category || t('noCategory')}</td> {/* Display category */}
                   <td className="py-3 px-4 whitespace-nowrap">${p.wholesale.toFixed(2)}</td>
                   <td className="py-3 px-4 whitespace-nowrap">${salePricePer500g.toFixed(2)}</td>
                   <td className="py-3 px-4 whitespace-nowrap">{kgPurchased.toFixed(2)} {t('kgUnit')}</td>

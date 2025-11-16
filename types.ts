@@ -1,5 +1,7 @@
+import { Timestamp } from 'firebase/firestore'; // Import Timestamp from Firebase
+
 export interface Product {
-  id: number;
+  id: string; // Changed to string for Firebase Document ID
   name: Record<Locale, string>;
   desc: Record<Locale, string>;
   wholesale: number;
@@ -9,6 +11,8 @@ export interface Product {
   initialUnitsStock: number; // Total number of units initially put into stock
   unitsSold: number;         // Total number of units sold
   activeOfferId?: string;    // Optional: ID of an active offer applying to this product
+  category?: string;         // New: Optional category field
+  createdAt: Timestamp;      // New: Firebase Timestamp for creation date
 }
 
 export interface CartItem {
@@ -84,6 +88,6 @@ export interface Offer {
   value?: number; // e.g., 20 for 20% or $20 off (optional for BuyXGetYFree)
   buyQuantity?: number; // X for Buy X Get Y Free
   getFreeQuantity?: number; // Y for Buy X Get Y Free
-  targetProductId: number; // The product this offer applies to
+  targetProductId: string; // The product this offer applies to (changed to string)
   isActive: boolean;
 }
