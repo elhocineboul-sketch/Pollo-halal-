@@ -1,120 +1,121 @@
-// src/useProducts.ts
 import { useState, useEffect } from 'react';
-import { db } from './firebase.config';
-import {
-  collection,
-  onSnapshot,
-  query,
-  addDoc,
-  deleteDoc,
-  updateDoc,
-  doc,
-  Timestamp,
-  serverTimestamp,
-  QueryDocumentSnapshot,
-  DocumentData,
-} from 'firebase/firestore';
-import { Product, Locale } from './types';
 
-// Helper to convert Firestore DocumentData to Product interface
-const productFromFirestore = (doc: QueryDocumentSnapshot<DocumentData>): Product => {
-  const data = doc.data();
-  // Ensure name and desc are objects or default to empty objects
-  const name = data.name || { es: '', en: '', ar: '' };
-  const desc = data.desc || { es: '', en: '', ar: '' };
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description?: string;
+  image?: string;
+  created_at?: string;
+}
 
-  return {
-    id: doc.id,
-    name: name as Record<Locale, string>,
-    desc: desc as Record<Locale, string>,
-    wholesale: data.wholesale || 0,
-    sale: data.sale || 0,
-    img: data.img || '',
-    unitWeightKg: data.unitWeightKg || 0,
-    initialUnitsStock: data.initialUnitsStock || 0,
-    unitsSold: data.unitsSold || 0,
-    activeOfferId: data.activeOfferId || undefined,
-    category: data.category || undefined, // New category field
-    createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(), // Ensure Timestamp type
-  };
-};
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const q = query(collection(db, 'products'));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const productsData = snapshot.docs.map((doc) => productFromFirestore(doc));
-        setProducts(productsData);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Failed to fetch products:', err);
-        setError('Failed to load products.');
-        setLoading(false);
+  // جلب جميع المنتجات
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/products`);
+      
+      if (!response.ok) {
+        throw new Error('فشل في جلب المنتجات');
       }
-    );
+      
+      const data = await response.json();
+      setProducts(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ');
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => unsubscribe();
+  // إضافة منتج جديد
+  const addProduct = async (product: Omit<Product, 'id' | 'created_at'>) => {
+    try {
+      const response = await fetch(`${API_URL}/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(product),
+      });
+
+      if (!response.ok) {
+        throw new Error('فشل في إضافة المنتج');
+      }
+
+      const newProduct = await response.json();
+      setProducts(prev => [newProduct, ...prev]);
+      return newProduct;
+    } catch (err) {
+      console.error('Error adding product:', err);
+      throw err;
+    }
+  };
+
+  // تحديث منتج
+  const updateProduct = async (id: number, product: Partial<Product>) => {
+    try {
+      const response = await fetch(`${API_URL}/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(product),
+      });
+
+      if (!response.ok) {
+        throw new Error('فشل في تحديث المنتج');
+      }
+
+      const updatedProduct = await response.json();
+      setProducts(prev =>
+        prev.map(p => (p.id === id ? updatedProduct : p))
+      );
+      return updatedProduct;
+    } catch (err) {
+      console.error('Error updating product:', err);
+      throw err;
+    }
+  };
+
+  // حذف منتج
+  const deleteProduct = async (id: number) => {
+    try {
+      const response = await fetch(`${API_URL}/products/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('فشل في حذف المنتج');
+      }
+
+      setProducts(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
-  const addProduct = async (productData: Omit<Product, 'id' | 'createdAt'> & { createdAt?: Timestamp | ReturnType<typeof serverTimestamp> }) => {
-    try {
-      setLoading(true);
-      // Ensure name and desc are valid objects
-      const newProductData = {
-        ...productData,
-        name: productData.name || { es: '', en: '', ar: '' },
-        desc: productData.desc || { es: '', en: '', ar: '' },
-        createdAt: serverTimestamp(), // Use serverTimestamp for new documents
-      };
-      await addDoc(collection(db, 'products'), newProductData);
-      setLoading(false);
-      return true;
-    } catch (e) {
-      console.error('Error adding document: ', e);
-      setError('Failed to add product.');
-      setLoading(false);
-      return false;
-    }
+  return {
+    products,
+    loading,
+    error,
+    fetchProducts,
+    addProduct,
+    updateProduct,
+    deleteProduct,
   };
-
-  const updateProduct = async (id: string, productData: Partial<Product>) => {
-    try {
-      setLoading(true);
-      const productRef = doc(db, 'products', id);
-      // Create a copy of the data and remove the 'id' property before updating,
-      // as the document ID cannot be changed.
-      const { id: _id, ...dataToUpdate } = productData;
-      await updateDoc(productRef, dataToUpdate);
-      setLoading(false);
-      return true;
-    } catch (e) {
-      console.error('Error updating document: ', e);
-      setError('Failed to update product.');
-      setLoading(false);
-      return false;
-    }
-  };
-
-  const deleteProduct = async (id: string) => {
-    try {
-      setLoading(true);
-      await deleteDoc(doc(db, 'products', id));
-      setLoading(false);
-      return true;
-    } catch (e) {
-      console.error('Error removing document: ', e);
-      setError('Failed to delete product.');
-      setLoading(false);
-      return false;
-    }
-  };
-
-  return { products, loading, error, addProduct, updateProduct, deleteProduct };
 };
