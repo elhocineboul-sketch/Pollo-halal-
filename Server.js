@@ -33,7 +33,6 @@ const initDatabase = async () => {
     process.exit(1);
   }
 };
-الجزء الثاني (النصف الثاني):
 app.get('/api/products', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
