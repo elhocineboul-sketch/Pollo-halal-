@@ -13,7 +13,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// ✨ إضافة: إنشاء الجدول تلقائياً عند بدء السيرفر
 const initDatabase = async () => {
   try {
     await pool.query(`
@@ -29,10 +28,35 @@ const initDatabase = async () => {
     console.log('✅ Database initialized successfully');
   } catch (err) {
     console.error('❌ Error initializing database:', err);
+    process.exit(1);
   }
 };
 
-// تشغيل الإنشاء التلقائي
-initDatabase();
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to Products API 🚀' });
+});
 
-// باقي الكود... (API routes, etc.)
+app.get('/api/products', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
+
+const startServer = async () => {
+  try {
+    await initDatabase();
+    
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
