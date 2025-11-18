@@ -1,12 +1,16 @@
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// ✨ إضافة: عرض ملفات React المبنية
+app.use(express.static(path.join(__dirname, 'dist')));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -32,10 +36,7 @@ const initDatabase = async () => {
   }
 };
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to Products API 🚀' });
-});
-
+// API Routes
 app.get('/api/products', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
@@ -44,6 +45,11 @@ app.get('/api/products', async (req, res) => {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
+});
+
+// ✨ إضافة: أي route آخر يعرض React
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 const startServer = async () => {
