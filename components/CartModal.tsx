@@ -3,8 +3,8 @@ import Modal from './Modal';
 import Button from './Button';
 import { CartItem, CustomerOrderDetails, Offer, OfferType } from '../types';
 import { useTranslation, useLocale } from '../i18n/LocaleContext';
-import { GoogleGenAI } from '@google/genai';
-import RecipeModal from './RecipeModal'; // New component for displaying recipes
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import RecipeModal from './RecipeModal';
 
 export interface CartModalProps {
   isOpen: boolean;
@@ -80,7 +80,7 @@ const CartModal: React.FC<CartModalProps> = ({
       setCustomerEmail('');
       setCustomerAddress('');
       setSelectedPaymentMethod(null);
-      setIsRecipeModalOpen(false); // Close recipe modal when cart closes
+      setIsRecipeModalOpen(false);
     } else {
       const enabledMethods = [
         isCODEnabled && 'COD',
@@ -112,12 +112,11 @@ const CartModal: React.FC<CartModalProps> = ({
     });
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-      setRecipe(response.text);
+      const ai = new GoogleGenerativeAI(process.env.API_KEY as string);
+      const model = ai.getGenerativeModel({ model: 'gemini-pro' });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      setRecipe(response.text());
     } catch (error) {
       console.error('Error getting recipe from Gemini:', error);
       setRecipeError(t('recipeError'));
@@ -125,7 +124,6 @@ const CartModal: React.FC<CartModalProps> = ({
       setIsRecipeLoading(false);
     }
   };
-
 
   const handleProceedToOrder = () => {
     if (!customerName || !customerPhone || !customerEmail || !customerAddress) {
